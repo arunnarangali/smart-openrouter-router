@@ -2,6 +2,12 @@
 
 Smart local proxy for Claude Code that routes requests to the best available **free** OpenRouter models automatically.
 
+## Full Documentation
+
+For complete step-by-step setup, prerequisites, troubleshooting, and operations, read:
+
+- [FULL_GUIDE.md](./FULL_GUIDE.md)
+
 ## How it works
 
 Claude Code sends requests to `ANTHROPIC_BASE_URL`.
