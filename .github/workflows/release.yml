@@ -19,11 +19,14 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           ARCHIVE="smart-openrouter-router-${TAG}.tar.gz"
-          tar -czf "$ARCHIVE" \
+          OUT_DIR="dist"
+          mkdir -p "$OUT_DIR"
+          tar -czf "$OUT_DIR/$ARCHIVE" \
             --exclude=.git \
+            --exclude="$OUT_DIR" \
             --transform "s#^#smart-openrouter-router-${TAG}/#" \
             .
-          sha256sum "$ARCHIVE" > SHA256SUMS
+          sha256sum "$OUT_DIR/$ARCHIVE" > "$OUT_DIR/SHA256SUMS"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -42,5 +45,5 @@ jobs:
 
             Checksums are included in `SHA256SUMS`.
           files: |
-            smart-openrouter-router-${{ github.ref_name }}.tar.gz
-            SHA256SUMS
+            dist/smart-openrouter-router-${{ github.ref_name }}.tar.gz
+            dist/SHA256SUMS
