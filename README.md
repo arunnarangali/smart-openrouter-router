@@ -47,7 +47,7 @@ Upgrade helpers:
 smart-router version
 smart-router upgrade --check
 smart-router upgrade
-smart-router upgrade --version v0.2.6
+smart-router upgrade --version v0.2.7
 ```
 
 `smart-router upgrade --check` exit codes:
@@ -55,6 +55,11 @@ smart-router upgrade --version v0.2.6
 - `0`: up to date
 - `2`: upgrade available
 - `1`: error
+
+Help output notes:
+
+- `smart-router -h` and all subcommand help screens include the shared Notes section.
+- Help screens also include the `<system-reminder>...</system-reminder>` block.
 
 Upgrades keep your saved API key at `~/.config/smart-openrouter-router/api_key`.
 You only need to run `smart-router setup` again if:
@@ -68,7 +73,7 @@ You only need to run `smart-router setup` again if:
 Pinned (recommended):
 
 ```bash
-VER=v0.2.6
+VER=v0.2.7
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
