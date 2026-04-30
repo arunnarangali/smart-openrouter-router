@@ -26,7 +26,7 @@ jobs:
             --exclude="$OUT_DIR" \
             --transform "s#^#smart-openrouter-router-${TAG}/#" \
             .
-          sha256sum "$OUT_DIR/$ARCHIVE" > "$OUT_DIR/SHA256SUMS"
+          (cd "$OUT_DIR" && sha256sum "$ARCHIVE" > SHA256SUMS)
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -35,7 +35,9 @@ jobs:
           body: |
             ## Install (pinned)
             ```bash
-            curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/${{ github.ref_name }}/smart-router-install.sh | SMART_ROUTER_VERSION=${{ github.ref_name }} bash
+            VER=${{ github.ref_name }}
+            curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
+              | SMART_ROUTER_VERSION="$VER" bash
             ```
 
             ## Install (latest)

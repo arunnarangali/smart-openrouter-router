@@ -58,7 +58,7 @@ expected = ""
 for line in checksum_path.read_text(encoding="utf-8").splitlines():
     parts = line.strip().split()
     if len(parts) >= 2:
-        name = parts[1].lstrip("*")
+        name = parts[1].lstrip("*").split("/")[-1]
         if name == archive:
             expected = parts[0]
             break
