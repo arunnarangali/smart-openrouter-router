@@ -274,7 +274,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="smart-router", description="Smart Router helper CLI")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    setup = sub.add_parser("setup", help="Store and verify OpenRouter API key")
+    setup = sub.add_parser(
+        "setup",
+        help="Store and verify OpenRouter API key",
+        description=(
+            "Store and verify OpenRouter API key. "
+            "Saves key to ~/.config/smart-openrouter-router/api_key."
+        ),
+    )
     setup_group = setup.add_mutually_exclusive_group()
     setup_group.add_argument("--from-env", action="store_true", help="Read OPENROUTER_API_KEY from env")
     setup_group.add_argument("--visible", action="store_true", help="Show input while typing")
@@ -286,14 +293,27 @@ def build_parser() -> argparse.ArgumentParser:
     upgrade = sub.add_parser(
         "upgrade",
         help="Upgrade to latest or a specific version",
-        description="Upgrade smart-router. --check exit codes: 0 up-to-date, 2 upgrade available, 1 error.",
+        description=(
+            "Upgrade smart-router. Preserves saved API key in "
+            "~/.config/smart-openrouter-router/api_key. "
+            "Run setup again only if you ran reset --all, deleted ~/.config/smart-openrouter-router/, "
+            "or only use OPENROUTER_API_KEY in the current shell. "
+            "--check exit codes: 0 up-to-date, 2 upgrade available, 1 error."
+        ),
     )
     upgrade.add_argument("--check", action="store_true", help="Check installed vs latest without upgrading")
-    upgrade.add_argument("--version", default="", help="Install a specific tag (example: v0.2.5)")
+    upgrade.add_argument("--version", default="", help="Install a specific tag (example: v0.2.6)")
     upgrade.set_defaults(func=cmd_upgrade)
 
-    reset = sub.add_parser("reset", help="Reset runtime state")
-    reset.add_argument("--all", action="store_true", help="Remove key and uninstall commands")
+    reset = sub.add_parser(
+        "reset",
+        help="Reset runtime state",
+        description=(
+            "Reset runtime state. Default reset keeps saved API key. "
+            "Use --all to remove saved key and uninstall commands."
+        ),
+    )
+    reset.add_argument("--all", action="store_true", help="Remove saved key and uninstall commands")
     reset.set_defaults(func=cmd_reset)
 
     return parser
