@@ -91,7 +91,7 @@ Run the installer (adds commands to `~/.local/bin`):
 Pinned (recommended):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/v0.2.0/smart-router-install.sh | SMART_ROUTER_VERSION=v0.2.0 bash
+curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/v0.2.1/smart-router-install.sh | SMART_ROUTER_VERSION=v0.2.1 bash
 ```
 
 Latest (convenience, less reproducible):
