@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""Run Claude Code with smart-openrouter-router.
+
+Starts the router on a free local port, runs Claude with env overrides,
+and stops the router when Claude exits.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import signal
+import socket
+import subprocess
+import sys
+import time
+from pathlib import Path
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+
+
+CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "smart-openrouter-router"
+CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "smart-openrouter-router"
+SHARE_DIR = Path.home() / ".local" / "share" / "smart-openrouter-router"
+KEY_FILE = CONFIG_DIR / "api_key"
+ACTIVE_FILE = CACHE_DIR / "active.json"
+LOG_FILE = CACHE_DIR / "router.log"
+ROUTER_SCRIPT = SHARE_DIR / "smart_router.py"
+
+
+def eprint(message: str) -> None:
+    sys.stderr.write(message + "\n")
+
+
+def ensure_dirs() -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def read_api_key() -> str:
+    env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if env_key:
+        return env_key
+    if KEY_FILE.exists():
+        return KEY_FILE.read_text(encoding="utf-8").strip()
+    return ""
+
+
+def pick_free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def wait_for_status(port: int, timeout: float = 6.0) -> bool:
+    deadline = time.time() + timeout
+    url = f"http://127.0.0.1:{port}/status"
+    while time.time() < deadline:
+        try:
+            req = Request(url)
+            with urlopen(req, timeout=1.0):
+                return True
+        except URLError:
+            time.sleep(0.2)
+    return False
+
+
+def start_router(api_key: str, port: int) -> subprocess.Popen:
+    env = os.environ.copy()
+    env["OPENROUTER_API_KEY"] = api_key
+    env["PROXY_PORT"] = str(port)
+    env["SMART_ROUTER_LOG"] = str(LOG_FILE)
+
+    if not ROUTER_SCRIPT.exists():
+        fallback = Path.home() / "smart_router.py"
+        if fallback.exists():
+            return start_router_from_path(api_key, port, fallback)
+        raise FileNotFoundError(f"Router script not found: {ROUTER_SCRIPT}")
+
+    return start_router_from_path(api_key, port, ROUTER_SCRIPT)
+
+
+def start_router_from_path(api_key: str, port: int, script_path: Path) -> subprocess.Popen:
+    env = os.environ.copy()
+    env["OPENROUTER_API_KEY"] = api_key
+    env["PROXY_PORT"] = str(port)
+    env["SMART_ROUTER_LOG"] = str(LOG_FILE)
+
+    log_handle = LOG_FILE.open("a", encoding="utf-8")
+    proc = subprocess.Popen(
+        [sys.executable, str(script_path)],
+        stdout=log_handle,
+        stderr=subprocess.STDOUT,
+        env=env,
+    )
+    return proc
+
+
+def write_active(port: int, pid: int) -> None:
+    payload = {
+        "port": port,
+        "pid": pid,
+        "started_at": time.time(),
+    }
+    ACTIVE_FILE.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def stop_router(proc: subprocess.Popen) -> None:
+    if proc.poll() is not None:
+        return
+    proc.terminate()
+    try:
+        proc.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=2)
+
+
+def print_tail_log(lines: int = 40) -> None:
+    if not LOG_FILE.exists():
+        eprint("(router log not found)")
+        return
+    data = LOG_FILE.read_text(encoding="utf-8", errors="ignore").splitlines()
+    tail = data[-lines:]
+    eprint("\n--- Router log (tail) ---")
+    for line in tail:
+        eprint(line)
+    eprint("--- end log ---\n")
+
+
+def main() -> int:
+    if not shutil.which("claude"):
+        eprint("Claude Code not found in PATH. Install it and try again.")
+        return 1
+
+    ensure_dirs()
+    api_key = read_api_key()
+    if not api_key:
+        eprint("OpenRouter API key not found. Run: smart-router setup")
+        return 1
+
+    port = pick_free_port()
+    try:
+        proc = start_router(api_key, port)
+    except FileNotFoundError as exc:
+        eprint(str(exc))
+        return 1
+
+    try:
+        if not wait_for_status(port):
+            eprint("Router failed to start or respond.")
+            print_tail_log()
+            stop_router(proc)
+            return 1
+
+        write_active(port, proc.pid)
+
+        env = os.environ.copy()
+        env["OPENROUTER_API_KEY"] = api_key
+        env["ANTHROPIC_API_KEY"] = api_key
+        env["ANTHROPIC_BASE_URL"] = f"http://127.0.0.1:{port}"
+        env.pop("ANTHROPIC_AUTH_TOKEN", None)
+        env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = "smart-router/best"
+        env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "smart-router/best"
+        env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = "smart-router/fast"
+
+        def handle_signal(_signum, _frame):
+            stop_router(proc)
+            sys.exit(130)
+
+        signal.signal(signal.SIGINT, handle_signal)
+        signal.signal(signal.SIGTERM, handle_signal)
+
+        result = subprocess.run(["claude", *sys.argv[1:]], env=env)
+        return result.returncode
+    finally:
+        stop_router(proc)
+        if ACTIVE_FILE.exists():
+            try:
+                ACTIVE_FILE.unlink()
+            except OSError:
+                pass
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

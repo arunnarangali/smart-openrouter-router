@@ -78,7 +78,40 @@ Repository files:
 
 ---
 
-## 4) Install router scripts to your home directory
+## 4) Install (Beginner - Recommended)
+
+Run the installer (adds commands to `~/.local/bin`):
+
+```bash
+./install.sh
+```
+
+If the installer tells you to add `~/.local/bin` to your PATH, do it now and open a new terminal.
+
+Now set your OpenRouter key:
+
+```bash
+smart-router setup
+```
+
+Run Claude Code through the router:
+
+```bash
+claude-free
+```
+
+The router starts automatically for this session and stops when Claude exits.
+
+Check status and last route:
+
+```bash
+smart-router status
+smart-router last
+```
+
+---
+
+## 5) Install router scripts to your home directory (Legacy)
 
 Claude shell config in this project expects scripts in your home folder.
 
@@ -91,7 +124,7 @@ chmod +x ~/smart_router_start.sh ~/test_router.sh
 
 ---
 
-## 5) Configure your `.zshrc`
+## 6) Configure your `.zshrc` (Legacy)
 
 Open your `~/.zshrc` and add the content from `zshrc_snippet.sh`.
 
@@ -129,7 +162,7 @@ export OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 
 ---
 
-## 6) Reload shell and start router
+## 7) Reload shell and start router (Legacy)
 
 ```bash
 source ~/.zshrc
@@ -149,7 +182,7 @@ bash ~/smart_router_start.sh
 
 ---
 
-## 7) Verify end-to-end setup
+## 8) Verify end-to-end setup
 
 Run the full test suite:
 
@@ -169,7 +202,7 @@ The test validates:
 
 ---
 
-## 8) How to use with Claude Code
+## 9) How to use with Claude Code
 
 1. Open a fresh terminal
 2. Start Claude Code
@@ -181,7 +214,7 @@ The proxy chooses and retries automatically.
 
 ---
 
-## 9) How to see which real model was used
+## 10) How to see which real model was used
 
 After any Claude Code request:
 
@@ -214,7 +247,7 @@ router-logs
 
 ---
 
-## 10) Fallback behavior (why this matters)
+## 11) Fallback behavior (why this matters)
 
 Sometimes a `:free` model can still fail on a specific provider (for example quota/spend-limit/rate-limit at that backend).
 
@@ -237,18 +270,23 @@ This makes Claude Code usage much more reliable.
 
 ---
 
-## 11) Helper commands
+## 12) Helper commands
 
-- `router-status` - show cache and top models
-- `router-last` - show last real routed model and retry info
-- `router-models` - quick top-model summary
-- `router-logs` - stream router logs
-- `router-stop` - stop router
-- `router-restart` - restart router
+- `smart-router setup` - store and verify OpenRouter key
+- `smart-router status` - router status
+- `smart-router last` - last routed request metadata
+- `smart-router reset` - clear runtime state
+- `smart-router reset --all` - uninstall and remove key
+- `claude-free` - run Claude Code through the router
+
+### Reset behavior
+
+- `smart-router reset` stops the router and clears runtime state (keeps API key)
+- `smart-router reset --all` removes key and installed commands
 
 ---
 
-## 12) Common issues and fixes
+## 13) Common issues and fixes
 
 ### A) `router-last: command not found`
 
@@ -321,7 +359,7 @@ Stop current process or change port in:
 
 ---
 
-## 13) Security checklist
+## 14) Security checklist
 
 - Never commit real API keys
 - Use placeholders in shared files
@@ -343,7 +381,7 @@ router-restart
 
 ---
 
-## 14) Update project later
+## 15) Update project later
 
 If repository changes:
 
@@ -359,10 +397,16 @@ router-restart
 
 ---
 
-## 15) Uninstall
+## 16) Uninstall
 
-1. Remove router block from `~/.zshrc`
-2. Remove files:
+1. If you used the beginner install:
+
+```bash
+smart-router reset --all
+```
+
+2. If you used the legacy manual setup, remove router block from `~/.zshrc`
+3. Remove files:
 
 ```bash
 rm -f ~/smart_router.py ~/smart_router_start.sh ~/test_router.sh
@@ -377,7 +421,7 @@ source ~/.zshrc
 
 ---
 
-## 16) Quick success checklist
+## 17) Quick success checklist
 
 - `router-status` returns JSON
 - `bash ~/test_router.sh` shows no failures

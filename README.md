@@ -2,6 +2,31 @@
 
 Smart local proxy for Claude Code that routes requests to the best available **free** OpenRouter models automatically.
 
+## Quick Start (Beginner)
+
+Install once, then run Claude Code through the router.
+
+```bash
+./install.sh
+```
+
+```bash
+smart-router setup
+```
+
+```bash
+claude-free
+```
+
+The router starts automatically for this session and stops when Claude exits.
+
+Optional:
+
+```bash
+smart-router status
+smart-router last
+```
+
 ## Full Documentation
 
 For complete step-by-step setup, prerequisites, troubleshooting, and operations, read:
@@ -49,11 +74,14 @@ For Claude Code tool/agent requests, it also:
 ## Files
 
 - `smart_router.py` - router server
-- `smart_router_start.sh` - auto-start helper
+- `bin/claude-free` - starts router and runs Claude Code
+- `bin/smart-router` - setup/status/last/reset CLI
+- `install.sh` - installer (puts commands in `~/.local/bin`)
+- `smart_router_start.sh` - legacy auto-start helper
 - `test_router.sh` - verification suite
-- `zshrc_snippet.sh` - shell setup block
+- `zshrc_snippet.sh` - legacy shell setup block
 
-## Setup
+## Setup (Legacy Manual)
 
 1. Copy files to your home directory:
 
@@ -80,16 +108,21 @@ source ~/.zshrc
 
 ## Commands
 
-- `router-status` - router status and top models
-- `router-last` - last routed request metadata
-- `router-logs` - tail router logs
-- `router-stop` - stop router
-- `router-restart` - restart router
-- `router-models` - one-line top models summary
+- `smart-router setup` - store and verify OpenRouter key
+- `smart-router status` - router status
+- `smart-router last` - last routed request metadata
+- `smart-router reset` - clear runtime state
+- `smart-router reset --all` - uninstall and remove key
+- `claude-free` - run Claude Code through the router
+
+### Reset behavior
+
+- `smart-router reset` stops the router and clears runtime state (keeps API key)
+- `smart-router reset --all` removes key and installed commands
 
 ## Verify
 
-Run full verification:
+Run full verification (legacy/manual):
 
 ```bash
 bash ~/test_router.sh

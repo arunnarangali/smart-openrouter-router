@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Smart Router helper CLI.
+
+Commands:
+  smart-router setup
+  smart-router status
+  smart-router last
+  smart-router reset [--all]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import signal
+import socket
+import sys
+import time
+from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+
+CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "smart-openrouter-router"
+CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "smart-openrouter-router"
+KEY_FILE = CONFIG_DIR / "api_key"
+ACTIVE_FILE = CACHE_DIR / "active.json"
+LOG_FILE = CACHE_DIR / "router.log"
+
+
+def eprint(message: str) -> None:
+    sys.stderr.write(message + "\n")
+
+
+def ensure_dirs() -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def read_api_key() -> str:
+    env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if env_key:
+        return env_key
+    if KEY_FILE.exists():
+        return KEY_FILE.read_text(encoding="utf-8").strip()
+    return ""
+
+
+def write_api_key(key: str) -> None:
+    ensure_dirs()
+    KEY_FILE.write_text(key.strip() + "\n", encoding="utf-8")
+    KEY_FILE.chmod(0o600)
+
+
+def verify_key(key: str) -> bool:
+    req = Request(
+        "https://openrouter.ai/api/v1/models",
+        headers={"Authorization": f"Bearer {key}"},
+    )
+    try:
+        with urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        return "data" in data
+    except (HTTPError, URLError, json.JSONDecodeError):
+        return False
+
+
+def load_active() -> dict:
+    if not ACTIVE_FILE.exists():
+        return {}
+    try:
+        return json.loads(ACTIVE_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def request_json(port: int, path: str) -> dict:
+    url = f"http://127.0.0.1:{port}{path}"
+    req = Request(url)
+    with urlopen(req, timeout=6) as resp:
+        return json.loads(resp.read())
+
+
+def cmd_setup(_args: argparse.Namespace) -> int:
+    ensure_dirs()
+    eprint("Enter OpenRouter API key (input hidden):")
+    key = ""
+    try:
+        key = __import__("getpass").getpass("")
+    except KeyboardInterrupt:
+        eprint("Setup cancelled.")
+        return 130
+
+    key = key.strip()
+    if not key:
+        eprint("No key provided.")
+        return 1
+
+    write_api_key(key)
+    if verify_key(key):
+        eprint("Key saved and verified.")
+        return 0
+    eprint("Key saved, but verification failed. Check the key and try again.")
+    return 1
+
+
+def cmd_status(_args: argparse.Namespace) -> int:
+    active = load_active()
+    port = active.get("port")
+    if not port:
+        eprint("Router not running. Start with: claude-free")
+        return 1
+    try:
+        data = request_json(int(port), "/status")
+        print(json.dumps(data, indent=2))
+        return 0
+    except (URLError, HTTPError, json.JSONDecodeError):
+        eprint("Router not responding. Try: claude-free")
+        return 1
+
+
+def cmd_last(_args: argparse.Namespace) -> int:
+    active = load_active()
+    port = active.get("port")
+    if not port:
+        eprint("Router not running. Start with: claude-free")
+        return 1
+    try:
+        data = request_json(int(port), "/last")
+        print(json.dumps(data, indent=2))
+        return 0
+    except (URLError, HTTPError, json.JSONDecodeError):
+        eprint("Router not responding. Try: claude-free")
+        return 1
+
+
+def cmd_reset(args: argparse.Namespace) -> int:
+    ensure_dirs()
+    active = load_active()
+    pid = active.get("pid")
+
+    if pid:
+        try:
+            os.kill(int(pid), signal.SIGTERM)
+            time.sleep(0.5)
+        except OSError:
+            pass
+
+    if ACTIVE_FILE.exists():
+        try:
+            ACTIVE_FILE.unlink()
+        except OSError:
+            pass
+
+    if LOG_FILE.exists():
+        try:
+            LOG_FILE.unlink()
+        except OSError:
+            pass
+
+    if args.all:
+        if KEY_FILE.exists():
+            try:
+                KEY_FILE.unlink()
+            except OSError:
+                pass
+
+        for path in [Path.home() / ".local" / "bin" / "claude-free", Path.home() / ".local" / "bin" / "smart-router"]:
+            if path.exists():
+                try:
+                    path.unlink()
+                except OSError:
+                    pass
+
+        eprint("Reset complete (all). Run install.sh to set up again.")
+        return 0
+
+    eprint("Reset complete. Your API key is preserved.")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="smart-router", description="Smart Router helper CLI")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("setup", help="Store and verify OpenRouter API key").set_defaults(func=cmd_setup)
+    sub.add_parser("status", help="Show router status").set_defaults(func=cmd_status)
+    sub.add_parser("last", help="Show last routed request").set_defaults(func=cmd_last)
+
+    reset = sub.add_parser("reset", help="Reset runtime state")
+    reset.add_argument("--all", action="store_true", help="Remove key and uninstall commands")
+    reset.set_defaults(func=cmd_reset)
+
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

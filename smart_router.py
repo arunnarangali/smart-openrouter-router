@@ -19,11 +19,11 @@ from urllib.request import Request, urlopen
 
 
 PROXY_HOST = "127.0.0.1"
-PROXY_PORT = 8080
+PROXY_PORT = int(os.environ.get("PROXY_PORT", "8080"))
 OPENROUTER_ORIGIN = "https://openrouter.ai"
 OPENROUTER_API_BASE = f"{OPENROUTER_ORIGIN}/api/v1"
 CACHE_TTL = 1800
-LOG_FILE = os.path.expanduser("~/.smart_router.log")
+LOG_FILE = os.environ.get("SMART_ROUTER_LOG", os.path.expanduser("~/.smart_router.log"))
 
 
 SCENARIO_KEYWORDS = {
