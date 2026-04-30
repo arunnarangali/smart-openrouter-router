@@ -21,6 +21,12 @@ The proxy then:
 5. Sends request to the best free model
 6. If provider/model fails (402/429/503), automatically retries the next free model
 
+For Claude Code agent/tool workflows, it also:
+
+7. Detects tool-style requests (`tools`, `tool_choice`, `parallel_tool_calls`, and Claude `?beta=true` request path)
+8. Prefers likely tool-capable free models in ranking
+9. Retries tool endpoint failures like `404 No endpoints found that support tool use`
+
 You keep using Claude Code normally. Model routing is automatic.
 
 ---
@@ -190,6 +196,8 @@ This shows fields like:
 - `scenario`
 - `tier`
 - `retry_count`
+- `success` (final request success state)
+- `tool_request` (whether request was tool/agent-style)
 - `failed_models` (if retries happened)
 
 You can also view status summary:
@@ -211,6 +219,11 @@ router-logs
 Sometimes a `:free` model can still fail on a specific provider (for example quota/spend-limit/rate-limit at that backend).
 
 The router now retries next ranked free models automatically.
+
+It also retries tool-endpoint failures for Claude Code, including:
+
+- `404 No endpoints found that support tool use`
+- provider quota/rate/spend failures on intermediate candidates
 
 Example flow:
 
@@ -267,6 +280,24 @@ Check details:
 router-last
 router-logs
 ```
+
+### G) Claude Code says `smart-router/best` may not exist
+
+This message is often a downstream provider/tool-endpoint failure, not a missing local model name.
+
+Run:
+
+```bash
+router-last
+```
+
+Check these fields:
+
+- `tool_request`: true means Claude tool/agent request path
+- `success`: false means all candidates failed
+- `failed_models`: exact provider/model errors during fallback chain
+
+If you see many `free-models-per-day` or provider quota errors, you may need to wait, use another key, or add OpenRouter credits.
 
 ### D) Port 8080 already in use
 

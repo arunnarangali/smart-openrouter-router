@@ -24,12 +24,19 @@ For each request, it:
 4. Routes to a best candidate
 5. If provider/model fails (`402`, `429`, `503`, quota/spend/rate errors), retries next ranked model automatically
 
+For Claude Code tool/agent requests, it also:
+
+6. Detects tool-style requests (`tools`, `tool_choice`, `parallel_tool_calls`, and Claude `?beta=true` flow)
+7. Prefers tool-capable free models during ranking
+8. Retries `404` tool-use endpoint errors (for example, `No endpoints found that support tool use`)
+
 ## Features
 
 - Automatic scenario-based routing
 - Free-model filtering (text-in/text-out chat models)
 - Correct path normalization (`/v1/...` -> `/api/v1/...`)
 - Automatic fallback/retry across free models
+- Tool-request aware fallback for Claude Code agent/tool calls
 - Visibility endpoints:
   - `GET /status`
   - `GET /last`
@@ -99,6 +106,17 @@ The router now retries next ranked free models automatically. Check fallback cha
 ```bash
 router-last
 ```
+
+### Claude Code says model may not exist
+
+If Claude Code shows `smart-router/best may not exist`, check `router-last`.
+
+This usually means OpenRouter returned a provider/tool-endpoint error, not that the local virtual model is missing.
+
+The router now retries tool-use endpoint failures automatically, and `/last` shows:
+
+- `tool_request`: whether this was a tool/agent-style request
+- `success`: whether routing finally succeeded
 
 ### Auth conflict in Claude Code
 
