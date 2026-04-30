@@ -2,8 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BIN_DIR="$HOME/.local/bin"
-SHARE_DIR="$HOME/.local/share/smart-openrouter-router"
+PREFIX="${SMART_ROUTER_PREFIX:-$HOME/.local}"
+BIN_DIR="$PREFIX/bin"
+SHARE_DIR="$PREFIX/share/smart-openrouter-router"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/smart-openrouter-router"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/smart-openrouter-router"
 

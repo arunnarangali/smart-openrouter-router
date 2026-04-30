@@ -29,6 +29,27 @@ smart-router status
 smart-router last
 ```
 
+## Install without git (curl)
+
+Pinned (recommended):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/v0.2.0/smart-router-install.sh | SMART_ROUTER_VERSION=v0.2.0 bash
+```
+
+Latest (convenience, less reproducible):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/main/smart-router-install.sh | SMART_ROUTER_VERSION=latest bash
+```
+
+Then:
+
+```bash
+smart-router setup
+claude-free
+```
+
 ## Full Documentation
 
 For complete step-by-step setup, prerequisites, troubleshooting, and operations, read:

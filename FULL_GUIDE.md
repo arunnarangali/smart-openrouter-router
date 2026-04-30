@@ -86,6 +86,27 @@ Run the installer (adds commands to `~/.local/bin`):
 ./install.sh
 ```
 
+### Install without git (curl)
+
+Pinned (recommended):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/v0.2.0/smart-router-install.sh | SMART_ROUTER_VERSION=v0.2.0 bash
+```
+
+Latest (convenience, less reproducible):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/main/smart-router-install.sh | SMART_ROUTER_VERSION=latest bash
+```
+
+Then:
+
+```bash
+smart-router setup
+claude-free
+```
+
 If the installer tells you to add `~/.local/bin` to your PATH, do it now and open a new terminal.
 
 Now set your OpenRouter key:

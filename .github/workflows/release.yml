@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build archive
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          ARCHIVE="smart-openrouter-router-${TAG}.tar.gz"
+          tar -czf "$ARCHIVE" \
+            --exclude=.git \
+            --transform "s#^#smart-openrouter-router-${TAG}/#" \
+            .
+          sha256sum "$ARCHIVE" > SHA256SUMS
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "smart-openrouter-router ${GITHUB_REF_NAME}"
+          body: |
+            ## Install (pinned)
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/${{ github.ref_name }}/smart-router-install.sh | SMART_ROUTER_VERSION=${{ github.ref_name }} bash
+            ```
+
+            ## Install (latest)
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/main/smart-router-install.sh | SMART_ROUTER_VERSION=latest bash
+            ```
+
+            Checksums are included in `SHA256SUMS`.
+          files: |
+            smart-openrouter-router-${{ github.ref_name }}.tar.gz
+            SHA256SUMS
