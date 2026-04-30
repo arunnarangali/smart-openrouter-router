@@ -83,15 +83,26 @@ def request_json(port: int, path: str) -> dict:
         return json.loads(resp.read())
 
 
-def cmd_setup(_args: argparse.Namespace) -> int:
+def cmd_setup(args: argparse.Namespace) -> int:
     ensure_dirs()
-    eprint("Enter OpenRouter API key (input hidden):")
     key = ""
-    try:
-        key = __import__("getpass").getpass("")
-    except KeyboardInterrupt:
-        eprint("Setup cancelled.")
-        return 130
+
+    if args.from_env:
+        key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        if not key:
+            eprint("OPENROUTER_API_KEY is not set.")
+            return 1
+    else:
+        try:
+            if args.visible:
+                eprint("Enter OpenRouter API key (input visible):")
+                key = input("")
+            else:
+                eprint("Enter OpenRouter API key (paste and press Enter; nothing will appear):")
+                key = __import__("getpass").getpass("")
+        except KeyboardInterrupt:
+            eprint("Setup cancelled.")
+            return 130
 
     key = key.strip()
     if not key:
@@ -185,7 +196,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="smart-router", description="Smart Router helper CLI")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("setup", help="Store and verify OpenRouter API key").set_defaults(func=cmd_setup)
+    setup = sub.add_parser("setup", help="Store and verify OpenRouter API key")
+    setup_group = setup.add_mutually_exclusive_group()
+    setup_group.add_argument("--from-env", action="store_true", help="Read OPENROUTER_API_KEY from env")
+    setup_group.add_argument("--visible", action="store_true", help="Show input while typing")
+    setup.set_defaults(func=cmd_setup)
     sub.add_parser("status", help="Show router status").set_defaults(func=cmd_status)
     sub.add_parser("last", help="Show last routed request").set_defaults(func=cmd_last)
 

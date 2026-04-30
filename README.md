@@ -16,6 +16,18 @@ Install once, then run Claude Code through the router.
 smart-router setup
 ```
 
+Note: the prompt is hidden (no characters will appear). Paste the key and press Enter.
+
+You can also use one of these:
+
+```bash
+smart-router setup --visible
+```
+
+```bash
+OPENROUTER_API_KEY="sk-or-..." smart-router setup --from-env
+```
+
 ```bash
 claude-free
 ```

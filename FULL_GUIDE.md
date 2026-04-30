@@ -117,6 +117,20 @@ Now set your OpenRouter key:
 smart-router setup
 ```
 
+Note: the prompt is hidden (no characters will appear). Paste the key and press Enter.
+
+If you prefer visible input:
+
+```bash
+smart-router setup --visible
+```
+
+If you want a non-interactive setup:
+
+```bash
+OPENROUTER_API_KEY="sk-or-..." smart-router setup --from-env
+```
+
 Run Claude Code through the router:
 
 ```bash
