@@ -1,5 +1,7 @@
 # smart-openrouter-router
 
+[![Quick Start](https://img.shields.io/badge/Quick%20Start-Beginner-brightgreen)](#quick-start-beginner)
+
 Smart local proxy for Claude Code that routes requests to the best available **free** OpenRouter models automatically.
 
 ## Quick Start (Beginner)
