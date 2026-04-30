@@ -154,7 +154,22 @@ def detect_scenario(messages):
     return best
 
 
-def rank_models(models, scenario):
+def model_supports_tools(model):
+    architecture = model.get("architecture") or {}
+    supported = [str(x).lower() for x in (architecture.get("supported_parameters") or [])]
+    tags = [str(x).lower() for x in (model.get("tags") or [])]
+    combined = " ".join([
+        str(model.get("id") or "").lower(),
+        str(model.get("name") or "").lower(),
+        str(model.get("description") or "").lower(),
+        " ".join(supported),
+        " ".join(tags),
+    ])
+    markers = ["tool", "tools", "tool_choice", "function", "function_call", "agentic"]
+    return any(marker in combined for marker in markers)
+
+
+def rank_models(models, scenario, tool_request=False):
     def score(model):
         value = 0.0
         model_id = (model.get("id") or "").lower()
@@ -211,6 +226,12 @@ def rank_models(models, scenario):
             if "chat" in combined:
                 value += 10
 
+        if tool_request:
+            if model_supports_tools(model):
+                value += 35
+            else:
+                value -= 15
+
         if "2025" in combined:
             value += 10
         elif "2024" in combined:
@@ -224,7 +245,12 @@ def rank_models(models, scenario):
         return value
 
     ranked = sorted(models, key=score, reverse=True)
-    log.info("Top models for [%s]: %s", scenario, [(m.get("id"), round(score(m), 1)) for m in ranked[:5]])
+    log.info(
+        "Top models for [%s] tool_request=%s: %s",
+        scenario,
+        tool_request,
+        [(m.get("id"), round(score(m), 1)) for m in ranked[:5]],
+    )
     return ranked
 
 
@@ -268,12 +294,22 @@ def parse_error_details(body_bytes):
 def should_retry(status, body_bytes):
     if status in {429, 503}:
         return True
+    details = parse_error_details(body_bytes)
+    combined = f"{details.get('message', '')}".lower()
+
+    if status == 404:
+        tool_markers = [
+            "no endpoints found",
+            "support tool use",
+            "tool use",
+            "tools",
+            "agent",
+        ]
+        return any(marker in combined for marker in tool_markers)
+
     if status != 402:
         return False
 
-    combined = ""
-    details = parse_error_details(body_bytes)
-    combined = f"{details.get('message', '')}".lower()
     retry_markers = [
         "spend limit exceeded",
         "quota",
@@ -325,7 +361,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
             self._error(503, "Could not fetch free models from OpenRouter")
             return
 
-        ranked_models = rank_models(free_models, scenario)
+        tool_request = bool(body.get("tools") or body.get("tool_choice") or body.get("parallel_tool_calls"))
+        if "beta=true" in self.path.lower():
+            tool_request = True
+
+        ranked_models = rank_models(free_models, scenario, tool_request=tool_request)
         requested_model_raw = str(body.get("model") or "")
         candidates, routing_tier = select_candidates(ranked_models, requested_model_raw)
         candidates = [c for c in candidates if c]
@@ -418,6 +458,21 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 return
 
         retry_count = len(failed_models)
+        success = bool(final_status and 200 <= int(final_status) < 300)
+
+        if not success and tool_request and failed_models:
+            final_reason = str(failed_models[-1].get("reason") or "").lower()
+            if "tool use" in final_reason or "no endpoints found" in final_reason:
+                final_status = 503
+                final_body = json.dumps({
+                    "error": {
+                        "message": "No free OpenRouter model currently available for Claude Code tool use. Free quota/provider limits may be exhausted. Try again later or add OpenRouter credits.",
+                        "type": "proxy_error",
+                    }
+                }).encode("utf-8")
+                final_content_type = "application/json"
+                success = False
+
         self._record_last_route(
             requested_model=requested_model_raw or "(none)",
             final_model=final_model,
@@ -427,6 +482,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
             failed_models=failed_models,
             status=final_status,
             path=self.path,
+            success=success,
+            tool_request=tool_request,
         )
         self._proxy_response(
             final_status,
@@ -478,7 +535,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         free_models = model_cache.get_free_models(api_key) if api_key else []
         top_per_scenario = {}
         for scenario in ["coding", "reasoning", "writing"]:
-            top_per_scenario[scenario] = [m["id"] for m in rank_models(free_models, scenario)[:3]] if free_models else []
+            top_per_scenario[scenario] = [m["id"] for m in rank_models(free_models, scenario, tool_request=False)[:3]] if free_models else []
 
         self._json(200, {
             "status": "running",
@@ -495,13 +552,15 @@ class ProxyHandler(BaseHTTPRequestHandler):
         with last_route_lock:
             return dict(last_route)
 
-    def _record_last_route(self, requested_model, final_model, scenario, tier, retry_count, failed_models, status, path):
+    def _record_last_route(self, requested_model, final_model, scenario, tier, retry_count, failed_models, status, path, success, tool_request):
         payload = {
             "requested_model": requested_model,
             "final_model": final_model,
             "scenario": scenario,
             "tier": tier,
             "retry_count": retry_count,
+            "success": success,
+            "tool_request": tool_request,
             "failed_models": failed_models,
             "status": status,
             "path": path,

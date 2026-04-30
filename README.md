@@ -33,6 +33,7 @@ For each request, it:
 - Visibility endpoints:
   - `GET /status`
   - `GET /last`
+  - `/last` includes `success` and `tool_request`
 - Response headers:
   - `X-Smart-Router-Model`
   - `X-Smart-Router-Scenario`
