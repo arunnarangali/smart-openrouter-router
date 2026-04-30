@@ -94,7 +94,7 @@ if [ ! -d "$SOURCE_DIR" ]; then
   exit 1
 fi
 
-SMART_ROUTER_PREFIX="$PREFIX" bash "$SOURCE_DIR/install.sh"
+SMART_ROUTER_VERSION="$TAG" SMART_ROUTER_PREFIX="$PREFIX" bash "$SOURCE_DIR/install.sh"
 
 echo ""
 echo "Next steps:"

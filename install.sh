@@ -14,6 +14,8 @@ cp "$ROOT_DIR/smart_router.py" "$SHARE_DIR/smart_router.py"
 cp "$ROOT_DIR/bin/claude-free" "$BIN_DIR/claude-free"
 cp "$ROOT_DIR/bin/smart-router" "$BIN_DIR/smart-router"
 
+printf '%s\n' "${SMART_ROUTER_VERSION:-unknown}" > "$SHARE_DIR/VERSION"
+
 chmod +x "$BIN_DIR/claude-free" "$BIN_DIR/smart-router"
 
 echo "Installed: $BIN_DIR/claude-free"

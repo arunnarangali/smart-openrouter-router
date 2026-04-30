@@ -41,12 +41,27 @@ smart-router status
 smart-router last
 ```
 
+Upgrade helpers:
+
+```bash
+smart-router version
+smart-router upgrade --check
+smart-router upgrade
+smart-router upgrade --version v0.2.5
+```
+
+`smart-router upgrade --check` exit codes:
+
+- `0`: up to date
+- `2`: upgrade available
+- `1`: error
+
 ## Install without git (curl)
 
 Pinned (recommended):
 
 ```bash
-VER=v0.2.3
+VER=v0.2.5
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```

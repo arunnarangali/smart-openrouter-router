@@ -5,6 +5,8 @@ Commands:
   smart-router setup
   smart-router status
   smart-router last
+  smart-router version
+  smart-router upgrade [--check] [--version TAG]
   smart-router reset [--all]
 """
 
@@ -15,7 +17,7 @@ import json
 import os
 import shutil
 import signal
-import socket
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -28,6 +30,19 @@ CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sm
 KEY_FILE = CONFIG_DIR / "api_key"
 ACTIVE_FILE = CACHE_DIR / "active.json"
 LOG_FILE = CACHE_DIR / "router.log"
+REPO = "arunnarangali/smart-openrouter-router"
+
+
+def install_prefix() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
+def share_dir() -> Path:
+    return install_prefix() / "share" / "smart-openrouter-router"
+
+
+def version_file() -> Path:
+    return share_dir() / "VERSION"
 
 
 def eprint(message: str) -> None:
@@ -81,6 +96,41 @@ def request_json(port: int, path: str) -> dict:
     req = Request(url)
     with urlopen(req, timeout=6) as resp:
         return json.loads(resp.read())
+
+
+def installed_version() -> str:
+    path = version_file()
+    if not path.exists():
+        return "unknown"
+    value = path.read_text(encoding="utf-8").strip()
+    return value or "unknown"
+
+
+def latest_tag() -> str:
+    req = Request(f"https://api.github.com/repos/{REPO}/releases/latest")
+    with urlopen(req, timeout=10) as resp:
+        data = json.loads(resp.read())
+    tag = str(data.get("tag_name", "")).strip()
+    if not tag:
+        raise ValueError("Latest release tag not found")
+    return tag
+
+
+def run_upgrade(target: str, prefix: Path) -> int:
+    if shutil.which("curl") is None or shutil.which("bash") is None:
+        eprint("Upgrade requires curl and bash.")
+        return 1
+
+    env = os.environ.copy()
+    env["SMART_ROUTER_VERSION"] = target
+    env["SMART_ROUTER_PREFIX"] = str(prefix)
+    command = (
+        "curl -fsSL "
+        f"https://raw.githubusercontent.com/{REPO}/main/smart-router-install.sh "
+        "| bash"
+    )
+    result = subprocess.run(["bash", "-lc", command], env=env)
+    return int(result.returncode)
 
 
 def cmd_setup(args: argparse.Namespace) -> int:
@@ -147,6 +197,34 @@ def cmd_last(_args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_version(_args: argparse.Namespace) -> int:
+    print(installed_version())
+    return 0
+
+
+def cmd_upgrade(args: argparse.Namespace) -> int:
+    if args.check and args.version:
+        eprint("Use either --check or --version, not both.")
+        return 1
+
+    current = installed_version()
+    try:
+        latest = latest_tag()
+    except (HTTPError, URLError, json.JSONDecodeError, ValueError) as exc:
+        eprint(f"Failed to fetch latest release: {exc}")
+        return 1
+
+    if args.check:
+        print(f"Installed: {current}, Latest: {latest}")
+        if current == latest:
+            return 0
+        return 2
+
+    target = args.version.strip() if args.version else latest
+    eprint(f"Upgrading {current} -> {target}")
+    return run_upgrade(target, install_prefix())
+
+
 def cmd_reset(args: argparse.Namespace) -> int:
     ensure_dirs()
     active = load_active()
@@ -203,6 +281,16 @@ def build_parser() -> argparse.ArgumentParser:
     setup.set_defaults(func=cmd_setup)
     sub.add_parser("status", help="Show router status").set_defaults(func=cmd_status)
     sub.add_parser("last", help="Show last routed request").set_defaults(func=cmd_last)
+    sub.add_parser("version", help="Show installed smart-router version").set_defaults(func=cmd_version)
+
+    upgrade = sub.add_parser(
+        "upgrade",
+        help="Upgrade to latest or a specific version",
+        description="Upgrade smart-router. --check exit codes: 0 up-to-date, 2 upgrade available, 1 error.",
+    )
+    upgrade.add_argument("--check", action="store_true", help="Check installed vs latest without upgrading")
+    upgrade.add_argument("--version", default="", help="Install a specific tag (example: v0.2.5)")
+    upgrade.set_defaults(func=cmd_upgrade)
 
     reset = sub.add_parser("reset", help="Reset runtime state")
     reset.add_argument("--all", action="store_true", help="Remove key and uninstall commands")
