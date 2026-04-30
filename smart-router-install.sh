@@ -95,8 +95,3 @@ if [ ! -d "$SOURCE_DIR" ]; then
 fi
 
 SMART_ROUTER_VERSION="$TAG" SMART_ROUTER_PREFIX="$PREFIX" bash "$SOURCE_DIR/install.sh"
-
-echo ""
-echo "Next steps:"
-echo "  smart-router setup"
-echo "  claude-free"

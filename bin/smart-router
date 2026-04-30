@@ -369,7 +369,7 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     upgrade.add_argument("--check", action="store_true", help="Check installed vs latest without upgrading")
-    upgrade.add_argument("--version", default="", help="Install a specific tag (example: v0.2.6)")
+    upgrade.add_argument("--version", default="", help="Install a specific tag (example: v0.2.9)")
     upgrade.set_defaults(func=cmd_upgrade)
 
     reset = sub.add_parser(

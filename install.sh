@@ -29,5 +29,14 @@ fi
 
 echo ""
 echo "Next steps:"
-echo "  smart-router setup"
-echo "  claude-free"
+KEY_FILE="$CONFIG_DIR/api_key"
+if [ -f "$KEY_FILE" ]; then
+  echo "  claude-free"
+  echo ""
+  echo "Optional:"
+  echo "  smart-router status"
+  echo "  smart-router last"
+else
+  echo "  smart-router setup"
+  echo "  claude-free"
+fi

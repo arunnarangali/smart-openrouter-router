@@ -91,7 +91,7 @@ Run the installer (adds commands to `~/.local/bin`):
 Pinned (recommended):
 
 ```bash
-VER=v0.2.8
+VER=v0.2.9
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -152,7 +152,7 @@ Check and upgrade versions:
 smart-router version
 smart-router upgrade --check
 smart-router upgrade
-smart-router upgrade --version v0.2.8
+smart-router upgrade --version v0.2.9
 ```
 
 `smart-router upgrade --check` exit codes:
@@ -172,6 +172,8 @@ You only need to run `smart-router setup` again if:
 - you ran `smart-router reset --all`
 - you deleted `~/.config/smart-openrouter-router/`
 - you only use `OPENROUTER_API_KEY` in the current shell/session
+
+On upgrade, installer next steps only suggest `smart-router setup` when a saved key is missing.
 
 ---
 
