@@ -220,6 +220,14 @@ The router still enforces free-only filtering at runtime.
 
 Use `smart-router models` to view current best live free models without modifying config.
 
+If config has no preferred models yet, `smart-router config view` now warns and tells you to run `smart-router config refresh`.
+
+`smart-router status` now includes config visibility fields:
+
+- `config_source`
+- `config_updated_at`
+- `config_preferred_models`
+
 ### Reset behavior
 
 - `smart-router reset` stops the router and clears runtime state (keeps API key)

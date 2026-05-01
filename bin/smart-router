@@ -455,7 +455,24 @@ def cmd_config_view(_args: argparse.Namespace) -> int:
     if not CONFIG_FILE.exists():
         eprint("Config not found. Run: smart-router config refresh")
         return 1
-    print(CONFIG_FILE.read_text(encoding="utf-8"))
+    raw = CONFIG_FILE.read_text(encoding="utf-8")
+    try:
+        cfg = json.loads(raw)
+    except json.JSONDecodeError:
+        print(raw)
+        return 0
+
+    profiles = cfg.get("profiles") if isinstance(cfg.get("profiles"), dict) else {}
+    preferred_total = 0
+    for name in ["coding", "reasoning", "writing", "fast"]:
+        profile = profiles.get(name) if isinstance(profiles, dict) else {}
+        preferred = profile.get("preferred", []) if isinstance(profile, dict) else []
+        preferred_total += len(preferred) if isinstance(preferred, list) else 0
+
+    if preferred_total == 0:
+        print("Config has no preferred models yet. Run: smart-router config refresh")
+
+    print(raw)
     return 0
 
 
@@ -506,6 +523,7 @@ def cmd_models(args: argparse.Namespace) -> int:
         for idx, model_id in enumerate(result["scenarios"].get(scenario, []), start=1):
             print(f"  {idx}. {model_id}")
     print("\nNote: Runtime may still skip models due to cooldowns, stats, quota, or tool support.")
+    print("To save these recommendations into config, run: smart-router config refresh")
     return 0
 
 

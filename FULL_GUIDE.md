@@ -182,6 +182,8 @@ smart-router config refresh
 
 - `config refresh` updates preferred model recommendations from live OpenRouter free models.
 - Router still enforces free-only filtering at request time.
+- `config view` warns when preferred lists are empty and points you to `smart-router config refresh`.
+- `status` includes `config_source`, `config_updated_at`, and `config_preferred_models` so you can quickly see config freshness.
 
 Check and upgrade versions:
 

@@ -10,6 +10,7 @@ All notable changes to this project are documented in this file.
 - Refined setup replacement messaging to explicitly state old-key replacement behavior on verify success/failure.
 - Added `CLI_COMMANDS.md` with grouped terminal command/help descriptions.
 - Added explicit key update command: `smart-router key update` (with `--visible` and `--from-env`) for clearer API key replacement workflow.
+- Improved config visibility: `smart-router config view` now warns when preferred lists are empty, `smart-router models` reminds how to save live recommendations, and `/status` exposes `config_source` and `config_preferred_models`.
 
 ### Fixed
 

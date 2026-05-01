@@ -764,6 +764,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
         router_config = load_router_config()
         cooldowns = load_cooldowns()
         stats = load_stats()
+        profiles = (router_config.get("profiles") or {}) if isinstance(router_config.get("profiles"), dict) else {}
+        config_preferred_models = 0
+        for scenario in ["coding", "reasoning", "writing", "fast"]:
+            profile = profiles.get(scenario, {}) if isinstance(profiles, dict) else {}
+            preferred = profile.get("preferred", []) if isinstance(profile, dict) else []
+            if isinstance(preferred, list):
+                config_preferred_models += len(preferred)
         for scenario in ["coding", "reasoning", "writing"]:
             profile = (router_config.get("profiles") or {}).get(scenario, {})
             top_per_scenario[scenario] = [
@@ -784,7 +791,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
             "cache_age_seconds": int(model_cache.cache_age()) if model_cache.cache_age() >= 0 else None,
             "policy": (router_config.get("policy") or {}).get("mode", "free-only"),
             "config_path": str(CONFIG_FILE),
+            "config_source": router_config.get("source"),
             "config_updated_at": router_config.get("updated_at"),
+            "config_preferred_models": config_preferred_models,
             "model_cooldowns_active": len((cooldowns.get("models") or {})),
             "provider_cooldowns_active": len((cooldowns.get("providers") or {})),
             "stats_models_tracked": len((stats.get("models") or {})),
