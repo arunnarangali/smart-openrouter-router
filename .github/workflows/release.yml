@@ -28,24 +28,40 @@ jobs:
             .
           (cd "$OUT_DIR" && sha256sum "$ARCHIVE" > SHA256SUMS)
 
+      - name: Build release notes
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES_FILE="dist/RELEASE_BODY.md"
+
+          {
+            echo "## What's New"
+            echo ""
+            awk -v tag="$TAG" '
+              BEGIN { in_section=0 }
+              $0 ~ "^## " tag "$" { in_section=1; next }
+              in_section && $0 ~ "^## " { exit }
+              in_section { print }
+            ' CHANGELOG.md
+            echo ""
+            echo "## Install (pinned)"
+            echo '```bash'
+            echo "VER=${TAG}"
+            echo "curl -fsSL \"https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/${TAG}/smart-router-install.sh\" | SMART_ROUTER_VERSION=\"${TAG}\" bash"
+            echo '```'
+            echo ""
+            echo "## Install (latest)"
+            echo '```bash'
+            echo "curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/main/smart-router-install.sh | SMART_ROUTER_VERSION=latest bash"
+            echo '```'
+            echo ""
+            echo "Checksums are included in \`SHA256SUMS\`."
+          } > "$NOTES_FILE"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           name: "smart-openrouter-router ${GITHUB_REF_NAME}"
-          body: |
-            ## Install (pinned)
-            ```bash
-            VER=${{ github.ref_name }}
-            curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
-              | SMART_ROUTER_VERSION="$VER" bash
-            ```
-
-            ## Install (latest)
-            ```bash
-            curl -fsSL https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/main/smart-router-install.sh | SMART_ROUTER_VERSION=latest bash
-            ```
-
-            Checksums are included in `SHA256SUMS`.
+          body_path: dist/RELEASE_BODY.md
           files: |
             dist/smart-openrouter-router-${{ github.ref_name }}.tar.gz
             dist/SHA256SUMS
