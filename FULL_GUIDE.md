@@ -385,6 +385,11 @@ This makes Claude Code usage much more reliable.
 - `claude-free` - run Claude Code through the router
 - `opencode-free` - run OpenCode through the router
 
+### Streaming behavior
+
+- If the client requests streaming (`stream=true` or `Accept: text/event-stream`), output is forwarded incrementally.
+- Retries only occur before streaming starts; the router cannot switch models mid-stream.
+
 ### Reset behavior
 
 - `smart-router reset` stops the router and clears runtime state (keeps API key)

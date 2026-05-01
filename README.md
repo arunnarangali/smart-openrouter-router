@@ -157,6 +157,11 @@ For Claude Code tool/agent requests, it also:
   - `X-Smart-Router-Scenario`
   - `X-Smart-Router-Retry-Count`
 
+## Streaming behavior
+
+- When a client requests streaming (`stream=true` or `Accept: text/event-stream`), the router forwards chunks as they arrive.
+- Retries only happen before streaming starts; once a stream is active, the router cannot switch models mid-response.
+
 ## Files
 
 - `smart_router.py` - router server
