@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.6
+
+### Added
+
+- Added 4 new scenarios: vision, long-context, research, creative
+- Router now detects image analysis, document processing, web search, and creative writing
+- All new scenarios use free-only model filtering
+
 ## v0.4.5
 
 ### Fixed

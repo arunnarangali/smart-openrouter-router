@@ -52,6 +52,26 @@ SCENARIO_KEYWORDS = {
         "content", "paragraph", "translate", "rewrite", "improve", "tone",
         "creative", "describe", "explain", "tutorial", "readme", "docs",
     ],
+    "vision": [
+        "image", "photo", "screenshot", "ocr", "visual", "analyze image",
+        "describe image", "read image", "face detect", "object detect",
+        "picture", "look at", "what is in", "extract text from",
+    ],
+    "long-context": [
+        "document", "pdf", "file", "analyze file", "process file",
+        "large file", "batch", "summarize document", "paper", "paper",
+        "chapter", "book", "full text",
+    ],
+    "research": [
+        "search", "web search", "find information", "look up", "browse",
+        "gather information", "investigate", "fact check", "explain",
+        "what is", "who is", "when did", "where",
+    ],
+    "creative": [
+        "story", "poem", "write poem", "creative writing", "joke",
+        "song", "narrative", "script", "screenplay", "fiction",
+        "creative", "make up", "invent",
+    ],
 }
 
 CODING_TAGS = {"coding", "code", "programming", "instruct"}
@@ -148,6 +168,30 @@ def default_config():
                 "prefer_patterns": ["flash", "mini", "small", "3b", "4b", "7b", "8b"],
                 "avoid_patterns": ["405b", "120b", "large"],
                 "min_context": 8000,
+            },
+            "vision": {
+                "preferred": [],
+                "prefer_patterns": ["vision", "multimodal", "image", "pixel", "vision"],
+                "avoid_patterns": ["tiny", "3b", "4b", "flash"],
+                "min_context": 4096,
+            },
+            "long-context": {
+                "preferred": [],
+                "prefer_patterns": ["large", "128k", "200k", "context"],
+                "avoid_patterns": ["vision", "image", "tiny", "3b"],
+                "min_context": 32000,
+            },
+            "research": {
+                "preferred": [],
+                "prefer_patterns": ["flash", "mini", "small", "fast"],
+                "avoid_patterns": [],
+                "min_context": 4096,
+            },
+            "creative": {
+                "preferred": [],
+                "prefer_patterns": ["creative", "story", "gemma", "llama"],
+                "avoid_patterns": ["coding", "coder"],
+                "min_context": 8192,
             },
         },
     }

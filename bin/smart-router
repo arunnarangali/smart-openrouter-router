@@ -75,6 +75,30 @@ def default_config() -> dict:
                 "avoid_patterns": ["405b", "120b", "large"],
                 "min_context": 8000,
             },
+            "vision": {
+                "preferred": [],
+                "prefer_patterns": ["vision", "multimodal", "image", "pixel", "vision"],
+                "avoid_patterns": ["tiny", "3b", "4b", "flash"],
+                "min_context": 4096,
+            },
+            "long-context": {
+                "preferred": [],
+                "prefer_patterns": ["large", "128k", "200k", "context"],
+                "avoid_patterns": ["vision", "image", "tiny", "3b"],
+                "min_context": 32000,
+            },
+            "research": {
+                "preferred": [],
+                "prefer_patterns": ["flash", "mini", "small", "fast"],
+                "avoid_patterns": [],
+                "min_context": 4096,
+            },
+            "creative": {
+                "preferred": [],
+                "prefer_patterns": ["creative", "story", "gemma", "llama"],
+                "avoid_patterns": ["coding", "coder"],
+                "min_context": 8192,
+            },
         },
     }
 
