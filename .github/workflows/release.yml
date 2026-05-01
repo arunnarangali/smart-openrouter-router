@@ -57,11 +57,22 @@ jobs:
             echo "Checksums are included in \`SHA256SUMS\`."
           } > "$NOTES_FILE"
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "smart-openrouter-router ${GITHUB_REF_NAME}"
-          body_path: dist/RELEASE_BODY.md
-          files: |
-            dist/smart-openrouter-router-${{ github.ref_name }}.tar.gz
-            dist/SHA256SUMS
+      - name: Create or Update Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          TITLE="smart-openrouter-router ${TAG}"
+          NOTES_FILE="dist/RELEASE_BODY.md"
+          REPO="${GITHUB_REPOSITORY}"
+
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$REPO" --title "$TITLE" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG" --repo "$REPO" --title "$TITLE" --notes-file "$NOTES_FILE"
+          fi
+
+          gh release upload "$TAG" \
+            "dist/smart-openrouter-router-${TAG}.tar.gz" \
+            "dist/SHA256SUMS" \
+            --clobber --repo "$REPO"
