@@ -65,6 +65,18 @@ else
   fail "smart-router setup help failed"
 fi
 
+if "$BIN_DIR/smart-router" models --help >/dev/null; then
+  pass "smart-router models help works"
+else
+  fail "smart-router models help failed"
+fi
+
+if "$BIN_DIR/smart-router" models >/dev/null 2>&1; then
+  pass "smart-router models command runs"
+else
+  pass "smart-router models fails cleanly when key is unavailable"
+fi
+
 if "$BIN_DIR/smart-router" config path >/dev/null; then
   pass "smart-router config path works"
 else

@@ -352,6 +352,12 @@ def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=No
             avg_latency = float(model_stats.get("avg_latency_ms", 0) or 0)
             if avg_latency > 0:
                 value -= min(20, avg_latency / 2000)
+            last_provider = str(model_stats.get("last_provider", "") or "")
+            if last_provider:
+                provider_cd = (cooldowns or {}).get("providers", {}).get(last_provider, {})
+                provider_until = float(provider_cd.get("until", 0) or 0)
+                if provider_until > time.time():
+                    value -= 300
 
         if "2025" in combined:
             value += 10
@@ -457,7 +463,7 @@ def cooldown_seconds_for_error(status, message):
     return 10 * 60
 
 
-def update_stats(model_id, success, latency_ms, status):
+def update_stats(model_id, success, latency_ms, status, provider=""):
     stats = load_stats()
     models = stats.setdefault("models", {})
     item = models.setdefault(model_id, {"successes": 0, "failures": 0, "avg_latency_ms": 0, "last_status": 0})
@@ -473,6 +479,8 @@ def update_stats(model_id, success, latency_ms, status):
     else:
         item["avg_latency_ms"] = int(((current_avg * (total - 1)) + latency_ms) / total)
     item["last_status"] = int(status or 0)
+    if provider:
+        item["last_provider"] = provider
     item["last_updated_at"] = datetime.now(timezone.utc).isoformat()
     save_json(STATS_FILE, stats)
 
@@ -494,6 +502,14 @@ def add_cooldown(model_id, provider, status, reason):
             "status": status,
         }
     save_json(COOLDOWNS_FILE, cooldowns)
+    return {
+        "model": model_id,
+        "provider": provider,
+        "status": status,
+        "reason": reason,
+        "until": until,
+        "duration_seconds": seconds,
+    }
 
 
 def normalize_openrouter_url(path):
@@ -563,10 +579,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return
         target_url = normalize_openrouter_url(self.path)
         failed_models = []
+        cooldowns_added = []
         final_status = None
         final_body = b""
         final_content_type = "application/json"
         final_model = ""
+        final_latency_ms = None
 
         for index, chosen in enumerate(candidates):
             attempt_started = time.time()
@@ -605,6 +623,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     final_content_type = resp.headers.get("Content-Type", "application/json")
                     final_model = chosen
                     latency_ms = int((time.time() - attempt_started) * 1000)
+                    final_latency_ms = latency_ms
                     update_stats(chosen, True, latency_ms, final_status)
                 break
             except HTTPError as exc:
@@ -618,8 +637,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     "provider": err_details.get("provider", ""),
                 })
                 latency_ms = int((time.time() - attempt_started) * 1000)
-                update_stats(chosen, False, latency_ms, err_status)
-                add_cooldown(chosen, err_details.get("provider", ""), err_status, err_details.get("message", "")[:300])
+                final_latency_ms = latency_ms
+                provider_name = err_details.get("provider", "")
+                update_stats(chosen, False, latency_ms, err_status, provider_name)
+                cooldowns_added.append(
+                    add_cooldown(chosen, provider_name, err_status, err_details.get("message", "")[:300])
+                )
                 log.warning(
                     "Model failed model=%s status=%s provider=%s reason=%s",
                     chosen,
@@ -644,8 +667,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     "provider": "",
                 })
                 latency_ms = int((time.time() - attempt_started) * 1000)
+                final_latency_ms = latency_ms
                 update_stats(chosen, False, latency_ms, 502)
-                add_cooldown(chosen, "", 502, str(exc))
+                cooldowns_added.append(add_cooldown(chosen, "", 502, str(exc)))
                 log.warning("Model failed model=%s status=502 reason=%s", chosen, str(exc))
 
                 if index < len(candidates) - 1:
@@ -681,6 +705,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
             path=self.path,
             success=success,
             tool_request=tool_request,
+            latency_ms=final_latency_ms,
+            cooldowns_added=cooldowns_added,
         )
         self._proxy_response(
             final_status,
@@ -756,6 +782,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
             "config_path": str(CONFIG_FILE),
             "config_updated_at": router_config.get("updated_at"),
             "cooldowns_active": len((cooldowns.get("models") or {})),
+            "model_cooldowns_active": len((cooldowns.get("models") or {})),
+            "provider_cooldowns_active": len((cooldowns.get("providers") or {})),
             "stats_models_tracked": len((stats.get("models") or {})),
             "top_per_scenario": top_per_scenario,
             "last_route": self._get_last_route(),
@@ -768,7 +796,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         with last_route_lock:
             return dict(last_route)
 
-    def _record_last_route(self, requested_model, final_model, scenario, tier, retry_count, failed_models, status, path, success, tool_request):
+    def _record_last_route(self, requested_model, final_model, scenario, tier, retry_count, failed_models, status, path, success, tool_request, latency_ms, cooldowns_added):
         payload = {
             "requested_model": requested_model,
             "final_model": final_model,
@@ -777,6 +805,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
             "retry_count": retry_count,
             "success": success,
             "tool_request": tool_request,
+            "latency_ms": latency_ms,
+            "cooldowns_added": cooldowns_added,
             "failed_models": failed_models,
             "status": status,
             "path": path,

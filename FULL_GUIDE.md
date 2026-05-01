@@ -145,6 +145,7 @@ Check status and last route:
 ```bash
 smart-router status
 smart-router last
+smart-router models
 smart-router config refresh
 smart-router config view
 smart-router cooldowns
@@ -321,6 +322,8 @@ This shows fields like:
 - `retry_count`
 - `success` (final request success state)
 - `tool_request` (whether request was tool/agent-style)
+- `latency_ms` (request latency for chosen model)
+- `cooldowns_added` (cooldowns recorded during fallback)
 - `failed_models` (if retries happened)
 
 You can also view status summary:
@@ -365,6 +368,7 @@ This makes Claude Code usage much more reliable.
 - `smart-router setup` - store and verify OpenRouter key
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
+- `smart-router models` - current best live free models by scenario
 - `smart-router config path|view|explain|reset|refresh` - config file management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - cooldown visibility/control
 - `smart-router stats` / `smart-router stats reset` - performance stats visibility/control

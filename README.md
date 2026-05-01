@@ -41,6 +41,7 @@ smart-router status
 smart-router last
 smart-router config refresh
 smart-router config view
+smart-router models
 smart-router cooldowns
 smart-router stats
 ```
@@ -187,6 +188,7 @@ source ~/.zshrc
 - `smart-router setup` - store and verify OpenRouter key
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
+- `smart-router models` - show current best live free models by scenario
 - `smart-router config path|view|explain|reset|refresh` - config management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
 - `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
@@ -202,6 +204,8 @@ lists for coding, reasoning, writing, and fast profiles in:
 - `~/.config/smart-openrouter-router/config.json`
 
 The router still enforces free-only filtering at runtime.
+
+Use `smart-router models` to view current best live free models without modifying config.
 
 ### Reset behavior
 

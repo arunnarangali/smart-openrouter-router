@@ -442,9 +442,43 @@ def cmd_config_explain(_args: argparse.Namespace) -> int:
                 "- prefer_patterns and avoid_patterns shape scenario ranking",
                 "- cooldowns and stats can alter runtime final model choice",
                 "- refresh config whenever OpenRouter model availability changes",
+                "- use smart-router models to view current best live free models",
             ]
         )
     )
+    return 0
+
+
+def cmd_models(args: argparse.Namespace) -> int:
+    key = read_api_key()
+    if not key:
+        eprint("OpenRouter API key not found. Run: smart-router setup")
+        return 1
+
+    try:
+        free_models = fetch_free_models(key)
+    except (HTTPError, URLError, json.JSONDecodeError) as exc:
+        eprint(f"Failed to fetch OpenRouter models: {exc}")
+        return 1
+
+    cfg = load_config()
+    profiles = cfg.get("profiles", {})
+    result = {"source": "openrouter-live-free-models", "policy": "free-only", "scenarios": {}}
+
+    for scenario in ["coding", "reasoning", "writing", "fast"]:
+        profile = profiles.get(scenario, {})
+        result["scenarios"][scenario] = rank_for_scenario(free_models, profile, scenario, top_n=args.top)
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return 0
+
+    print("Current best free OpenRouter models")
+    for scenario in ["coding", "reasoning", "writing", "fast"]:
+        print(f"\n{scenario}:")
+        for idx, model_id in enumerate(result["scenarios"].get(scenario, []), start=1):
+            print(f"  {idx}. {model_id}")
+    print("\nNote: Runtime may still skip models due to cooldowns, stats, quota, or tool support.")
     return 0
 
 
@@ -534,6 +568,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("status", help="Show router status", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_status)
     sub.add_parser("last", help="Show last routed request", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_last)
+    models = sub.add_parser("models", help="Show current best free models by scenario", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    models.add_argument("--json", action="store_true", help="Output JSON")
+    models.add_argument("--top", type=int, default=3, help="Number of models per scenario")
+    models.set_defaults(func=cmd_models)
     sub.add_parser("version", help="Show installed version", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_version)
 
     upgrade = sub.add_parser("upgrade", help="Upgrade to latest or specific tag", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)

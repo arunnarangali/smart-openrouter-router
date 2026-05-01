@@ -267,7 +267,7 @@ section "LAYER 6 - Last Route Visibility"
 
 last_resp=$(curl -s --max-time 6 "$PROXY/last" 2>/dev/null)
 if [ -n "$last_resp" ] && printf "%s" "$last_resp" | python3 -c "import json,sys; d=json.load(sys.stdin); assert isinstance(d, dict)" >/dev/null 2>&1; then
-  required_ok=$(printf "%s" "$last_resp" | python3 -c "import json,sys; d=json.load(sys.stdin); req=['requested_model','final_model','scenario','tier','retry_count','success','tool_request','failed_models','status','timestamp']; print('1' if all(k in d for k in req) else '0')")
+  required_ok=$(printf "%s" "$last_resp" | python3 -c "import json,sys; d=json.load(sys.stdin); req=['requested_model','final_model','scenario','tier','retry_count','success','tool_request','latency_ms','cooldowns_added','failed_models','status','timestamp']; print('1' if all(k in d for k in req) else '0')")
   if [ "$required_ok" = "1" ]; then
     pass "/last endpoint returns full routing metadata"
     info "Last route snapshot:"
@@ -279,6 +279,7 @@ print(f"    requested: {d.get('requested_model')}")
 print(f"    final:     {d.get('final_model')}")
 print(f"    scenario:  {d.get('scenario')}  tier: {d.get('tier')}  retries: {d.get('retry_count')}")
 print(f"    success:   {d.get('success')}  tool_request: {d.get('tool_request')}")
+print(f"    latency:   {d.get('latency_ms')} ms  cooldowns_added: {len(d.get('cooldowns_added', []))}")
 PY
   else
     fail "/last endpoint missing required keys"
