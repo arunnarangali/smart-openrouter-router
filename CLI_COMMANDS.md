@@ -4,6 +4,11 @@
 
 - `smart-router` - Smart Router helper CLI
 
+## Launchers
+
+- `claude-free` - Run Claude Code through the router
+- `opencode-free` - Run OpenCode through the router
+
 ## Setup
 
 - `smart-router setup` - Store and verify OpenRouter API key

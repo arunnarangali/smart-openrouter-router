@@ -33,8 +33,10 @@ BIN_DIR="$PREFIX/bin"
 SHARE_DIR="$PREFIX/share/smart-openrouter-router"
 
 assert_file "$BIN_DIR/claude-free"
+assert_file "$BIN_DIR/opencode-free"
 assert_file "$BIN_DIR/smart-router"
 assert_exec "$BIN_DIR/claude-free"
+assert_exec "$BIN_DIR/opencode-free"
 assert_exec "$BIN_DIR/smart-router"
 
 assert_file "$SHARE_DIR/smart_router.py"
@@ -43,6 +45,7 @@ assert_file "$SHARE_DIR/VERSION"
 python3 -m py_compile "$ROOT_DIR/smart_router.py"
 python3 -m py_compile "$ROOT_DIR/bin/smart-router"
 python3 -m py_compile "$ROOT_DIR/bin/claude-free"
+python3 -m py_compile "$ROOT_DIR/bin/opencode-free"
 pass "Python syntax checks passed"
 
 bash -n "$ROOT_DIR/install.sh"

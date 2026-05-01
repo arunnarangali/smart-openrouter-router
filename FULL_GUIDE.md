@@ -71,6 +71,7 @@ Repository files:
 
 - `smart_router.py` - main proxy server
 - `bin/claude-free` - starts router and runs Claude Code
+- `bin/opencode-free` - starts router and runs OpenCode
 - `bin/smart-router` - setup/status/last/reset CLI
 - `install.sh` - installer (puts commands in `~/.local/bin`)
 - `smart-router-install.sh` - curl-based installer
@@ -110,6 +111,7 @@ Then:
 ```bash
 smart-router setup
 claude-free
+opencode-free
 ```
 
 If the installer tells you to add `~/.local/bin` to your PATH, do it now and open a new terminal.
@@ -156,7 +158,13 @@ Run Claude Code through the router:
 claude-free
 ```
 
-The router starts automatically for this session and stops when Claude exits.
+Run OpenCode through the router:
+
+```bash
+opencode-free
+```
+
+The router starts automatically for this session and stops when the client exits.
 
 Check status and last route:
 
@@ -395,6 +403,7 @@ This makes Claude Code usage much more reliable.
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `claude-free` - run Claude Code through the router
+- `opencode-free` - run OpenCode through the router
 
 ### Reset behavior
 

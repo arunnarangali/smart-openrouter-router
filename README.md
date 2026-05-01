@@ -2,7 +2,7 @@
 
 [![Quick Start](https://img.shields.io/badge/Quick%20Start-Beginner-brightgreen)](#quick-start-beginner)
 
-Smart local proxy for Claude Code that routes requests to the best available **free** OpenRouter models automatically.
+Smart local proxy for Claude Code and OpenCode that routes requests to the best available **free** OpenRouter models automatically.
 
 ## Quick Start (Beginner)
 
@@ -48,7 +48,11 @@ OPENROUTER_API_KEY="sk-or-..." smart-router key update --from-env
 claude-free
 ```
 
-The router starts automatically for this session and stops when Claude exits.
+```bash
+opencode-free
+```
+
+The router starts automatically for this session and stops when the client exits.
 
 Optional:
 
@@ -117,6 +121,7 @@ Then:
 ```bash
 smart-router setup
 claude-free
+opencode-free
 ```
 
 ## Full Documentation
@@ -167,6 +172,7 @@ For Claude Code tool/agent requests, it also:
 
 - `smart_router.py` - router server
 - `bin/claude-free` - starts router and runs Claude Code
+- `bin/opencode-free` - starts router and runs OpenCode
 - `bin/smart-router` - setup/status/last/reset CLI
 - `install.sh` - installer (puts commands in `~/.local/bin`)
 - `legacy/` - legacy files (`smart_router_start.sh`, `test_router.sh`, `zshrc_snippet.sh`)
@@ -208,6 +214,7 @@ source ~/.zshrc
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `claude-free` - run Claude Code through the router
+- `opencode-free` - run OpenCode through the router
 
 ### Config Refresh
 

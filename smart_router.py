@@ -396,12 +396,12 @@ def choose_fast_model(ranked_models):
 
 def select_candidates(ranked_models, requested_model_raw):
     requested_model = requested_model_raw.lower()
-    if requested_model == "smart-router/fast":
+    if requested_model in {"smart-router/fast", "fast"}:
         fast = choose_fast_model(ranked_models)
         ordered = [m.get("id") for m in ranked_models if m.get("id")]
         candidates = [fast] + [m for m in ordered if m != fast]
         return candidates, "fast"
-    if requested_model == "smart-router/best" or requested_model.startswith("smart-router/") or not requested_model_raw:
+    if requested_model in {"smart-router/best", "best"} or requested_model.startswith("smart-router/") or not requested_model_raw:
         return [m.get("id") for m in ranked_models if m.get("id")], "best"
     return [requested_model_raw], "passthrough"
 

@@ -12,13 +12,15 @@ mkdir -p "$BIN_DIR" "$SHARE_DIR" "$CONFIG_DIR" "$CACHE_DIR"
 
 cp "$ROOT_DIR/smart_router.py" "$SHARE_DIR/smart_router.py"
 cp "$ROOT_DIR/bin/claude-free" "$BIN_DIR/claude-free"
+cp "$ROOT_DIR/bin/opencode-free" "$BIN_DIR/opencode-free"
 cp "$ROOT_DIR/bin/smart-router" "$BIN_DIR/smart-router"
 
 printf '%s\n' "${SMART_ROUTER_VERSION:-unknown}" > "$SHARE_DIR/VERSION"
 
-chmod +x "$BIN_DIR/claude-free" "$BIN_DIR/smart-router"
+chmod +x "$BIN_DIR/claude-free" "$BIN_DIR/opencode-free" "$BIN_DIR/smart-router"
 
 echo "Installed: $BIN_DIR/claude-free"
+echo "Installed: $BIN_DIR/opencode-free"
 echo "Installed: $BIN_DIR/smart-router"
 
 if ! echo "$PATH" | tr ':' '\n' | grep -qx "$BIN_DIR"; then
@@ -32,6 +34,7 @@ echo "Next steps:"
 KEY_FILE="$CONFIG_DIR/api_key"
 if [ -f "$KEY_FILE" ]; then
   echo "  claude-free"
+  echo "  opencode-free"
   echo ""
   echo "Optional:"
   echo "  smart-router status"
@@ -39,4 +42,5 @@ if [ -f "$KEY_FILE" ]; then
 else
   echo "  smart-router setup"
   echo "  claude-free"
+  echo "  opencode-free"
 fi
