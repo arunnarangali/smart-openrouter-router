@@ -123,6 +123,12 @@ def read_api_key() -> str:
     return ""
 
 
+def read_saved_api_key() -> str:
+    if KEY_FILE.exists():
+        return KEY_FILE.read_text(encoding="utf-8").strip()
+    return ""
+
+
 def write_api_key(key: str) -> None:
     ensure_dirs()
     KEY_FILE.write_text(key.strip() + "\n", encoding="utf-8")
@@ -298,19 +304,24 @@ def save_config(cfg: dict) -> None:
 
 def cmd_setup(args: argparse.Namespace) -> int:
     ensure_dirs()
+    current_key = read_saved_api_key()
+    current_state = "saved" if current_key else "none"
+    eprint("Setting up OpenRouter API key...")
+    eprint(f"Saved key: {current_state}")
     key = ""
     if args.from_env:
         key = os.environ.get("OPENROUTER_API_KEY", "").strip()
         if not key:
             eprint("OPENROUTER_API_KEY is not set.")
             return 1
+        eprint("Reading new key from OPENROUTER_API_KEY environment variable.")
     else:
         try:
             if args.visible:
-                eprint("Enter OpenRouter API key (input visible):")
+                eprint("Enter new OpenRouter API key (input visible):")
                 key = input("")
             else:
-                eprint("Enter OpenRouter API key (paste and press Enter; nothing will appear):")
+                eprint("Enter new OpenRouter API key (input hidden; paste and press Enter):")
                 key = __import__("getpass").getpass("")
         except KeyboardInterrupt:
             eprint("Setup cancelled.")
@@ -320,12 +331,15 @@ def cmd_setup(args: argparse.Namespace) -> int:
     if not key:
         eprint("No key provided.")
         return 1
+
+    eprint("Verifying new key...")
+    if not verify_key(key):
+        eprint("Verification failed. Saved key was not changed.")
+        return 1
+
     write_api_key(key)
-    if verify_key(key):
-        eprint("Key saved and verified.")
-        return 0
-    eprint("Key saved, but verification failed. Check the key and try again.")
-    return 1
+    eprint("New key saved and verified successfully.")
+    return 0
 
 
 def cmd_status(_args: argparse.Namespace) -> int:
