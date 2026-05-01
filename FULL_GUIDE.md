@@ -70,10 +70,12 @@ cd smart-openrouter-router
 Repository files:
 
 - `smart_router.py` - main proxy server
-- `smart_router_start.sh` - auto-start script
+- `bin/claude-free` - starts router and runs Claude Code
+- `bin/smart-router` - setup/status/last/reset CLI
+- `install.sh` - installer (puts commands in `~/.local/bin`)
+- `smart-router-install.sh` - curl-based installer
 - `test_install_flow.sh` - installer-flow verification (recommended)
-- `test_router.sh` - legacy/manual verification
-- `zshrc_snippet.sh` - shell setup block
+- `legacy/` - legacy files (`smart_router_start.sh`, `test_router.sh`, `zshrc_snippet.sh`)
 - `README.md` - quick guide
 - `FULL_GUIDE.md` - this complete guide
 
@@ -92,7 +94,7 @@ Run the installer (adds commands to `~/.local/bin`):
 Pinned (recommended):
 
 ```bash
-VER=v0.3.0
+VER=v0.3.3
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -480,14 +482,25 @@ router-restart
 
 ## 15) Update project later
 
-If repository changes:
+**Modern way (recommended):**
+
+```bash
+smart-router upgrade
+```
+
+Or re-run the installer:
+
+```bash
+./install.sh
+```
+
+**Legacy manual update:**
 
 ```bash
 cd ~/smart-openrouter-router
 git pull
-cp smart_router.py ~/smart_router.py
-cp smart_router_start.sh ~/smart_router_start.sh
-cp test_router.sh ~/test_router.sh
+cp smart_router.py legacy/smart_router.py
+cp legacy/* ~/  # if you still use legacy workflow
 chmod +x ~/smart_router_start.sh ~/test_router.sh
 router-restart
 ```
@@ -496,14 +509,15 @@ router-restart
 
 ## 16) Uninstall
 
-1. If you used the beginner install:
+1. **Modern install:**
 
 ```bash
 smart-router reset --all
 ```
 
-2. If you used the legacy manual setup, remove router block from `~/.zshrc`
-3. Remove files:
+2. **Legacy manual setup:**
+   - Remove router block from `~/.zshrc`
+   - Remove files:
 
 ```bash
 rm -f ~/smart_router.py ~/smart_router_start.sh ~/test_router.sh
@@ -520,9 +534,9 @@ source ~/.zshrc
 
 ## 17) Quick success checklist
 
-- `router-status` returns JSON
-- `bash ~/test_router.sh` shows no failures
-- Claude Code works with `smart-router/best`
-- `router-last` shows final real model and retry count
+- `smart-router status` returns JSON
+- `bash test_install_flow.sh` shows no failures
+- Claude Code works with `claude-free`
+- `smart-router last` shows final real model and retry count
 
 If all are true, setup is complete.

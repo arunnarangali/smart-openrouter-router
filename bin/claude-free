@@ -163,10 +163,10 @@ def main() -> int:
         write_active(port, proc.pid)
 
         env = os.environ.copy()
+        env.pop("ANTHROPIC_AUTH_TOKEN", None)  # Prevent Claude Code auth conflict
         env["OPENROUTER_API_KEY"] = api_key
         env["ANTHROPIC_API_KEY"] = api_key
         env["ANTHROPIC_BASE_URL"] = f"http://127.0.0.1:{port}"
-        env.pop("ANTHROPIC_AUTH_TOKEN", None)
         env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = "smart-router/best"
         env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "smart-router/best"
         env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = "smart-router/fast"

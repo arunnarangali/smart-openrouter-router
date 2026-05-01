@@ -70,7 +70,6 @@ smart-router upgrade --version v0.3.0
 Help output notes:
 
 - `smart-router -h` and all subcommand help screens include the shared Notes section.
-- Help screens also include the `<system-reminder>...</system-reminder>` block.
 
 Upgrades keep your saved API key at `~/.config/smart-openrouter-router/api_key`.
 You only need to run `smart-router setup` again if:
@@ -86,7 +85,7 @@ On upgrade, installer next steps only suggest `smart-router setup` when a saved 
 Pinned (recommended):
 
 ```bash
-VER=v0.3.0
+VER=v0.3.3
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -154,9 +153,7 @@ For Claude Code tool/agent requests, it also:
 - `bin/claude-free` - starts router and runs Claude Code
 - `bin/smart-router` - setup/status/last/reset CLI
 - `install.sh` - installer (puts commands in `~/.local/bin`)
-- `smart_router_start.sh` - legacy auto-start helper
-- `test_router.sh` - verification suite
-- `zshrc_snippet.sh` - legacy shell setup block
+- `legacy/` - legacy files (`smart_router_start.sh`, `test_router.sh`, `zshrc_snippet.sh`)
 
 ## Setup (Legacy Manual)
 

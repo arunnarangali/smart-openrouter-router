@@ -73,6 +73,10 @@ class ModelCache:
         self._last_fetch = 0
         self._lock = threading.Lock()
 
+    def cache_age(self):
+        with self._lock:
+            return time.time() - self._last_fetch if self._last_fetch else -1
+
     def get_free_models(self, api_key):
         with self._lock:
             if self._models and time.time() - self._last_fetch < CACHE_TTL:
@@ -777,11 +781,10 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self._json(200, {
             "status": "running",
             "free_models_cached": len(free_models),
-            "cache_age_seconds": int(time.time() - model_cache._last_fetch) if model_cache._last_fetch else None,
+            "cache_age_seconds": int(model_cache.cache_age()) if model_cache.cache_age() >= 0 else None,
             "policy": (router_config.get("policy") or {}).get("mode", "free-only"),
             "config_path": str(CONFIG_FILE),
             "config_updated_at": router_config.get("updated_at"),
-            "cooldowns_active": len((cooldowns.get("models") or {})),
             "model_cooldowns_active": len((cooldowns.get("models") or {})),
             "provider_cooldowns_active": len((cooldowns.get("providers") or {})),
             "stats_models_tracked": len((stats.get("models") or {})),

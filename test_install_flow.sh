@@ -47,7 +47,12 @@ pass "Python syntax checks passed"
 
 bash -n "$ROOT_DIR/install.sh"
 bash -n "$ROOT_DIR/smart-router-install.sh"
-bash -n "$ROOT_DIR/test_router.sh"
+if [ -f "$ROOT_DIR/test_router.sh" ]; then
+  bash -n "$ROOT_DIR/test_router.sh"
+fi
+if [ -f "$ROOT_DIR/legacy/test_router.sh" ]; then
+  bash -n "$ROOT_DIR/legacy/test_router.sh"
+fi
 bash -n "$ROOT_DIR/test_install_flow.sh"
 pass "Shell syntax checks passed"
 

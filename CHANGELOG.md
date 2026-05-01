@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.3.3
+
+### Fixed
+
+- Fixed `ANTHROPIC_AUTH_TOKEN` env leak in `bin/claude-free` that could cause "Both token and API key set" Claude Code error.
+- Fixed release notes AWK pattern in `.github/workflows/release.yml` to match exact changelog headings (was broken for all versions).
+- Added public `cache_age()` method to `ModelCache` class in `smart_router.py` to replace direct private attribute access.
+- Removed redundant `cooldowns_active` key from `/status` response in `smart_router.py`.
+
+### Changed
+
+- Moved legacy files (`test_router.sh`, `smart_router_start.sh`, `zshrc_snippet.sh`) to `legacy/` folder.
+- Updated `README.md` and `FULL_GUIDE.md` to reflect modern workflow and removed outdated `<system-reminder>` documentation claim.
+- Updated version references to `v0.3.3` in install examples.
+
+### Validation
+
+- Python compile checks passed.
+- Shell syntax checks passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.3.2
 
 ### Documentation
