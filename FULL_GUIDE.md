@@ -1,4 +1,4 @@
-# Full Guide: Smart OpenRouter Router for Claude Code
+# Full Guide: Smart OpenRouter Router for Claude Code and OpenCode
 
 This guide is written for someone starting from zero. Follow it step by step and you can set up the smart local router without manual model switching.
 
@@ -6,11 +6,11 @@ This guide is written for someone starting from zero. Follow it step by step and
 
 ## 1) What this project does
 
-Normally, Claude Code sends requests directly to the configured API endpoint.
+Normally, Claude Code or OpenCode sends requests directly to the configured API endpoint.
 
-With this project, Claude Code sends to a local proxy first:
+With this project, the client sends to a local proxy first:
 
-`Claude Code -> localhost:8080 -> OpenRouter`
+`Client (Claude/OpenCode) -> localhost:<auto-port> -> OpenRouter`
 
 The proxy then:
 
@@ -21,13 +21,13 @@ The proxy then:
 5. Sends request to the best free model
 6. If provider/model fails (402/429/503), automatically retries the next free model
 
-For Claude Code agent/tool workflows, it also:
+For agent/tool workflows, it also:
 
 7. Detects tool-style requests (`tools`, `tool_choice`, `parallel_tool_calls`, and Claude `?beta=true` request path)
 8. Prefers likely tool-capable free models in ranking
 9. Retries tool endpoint failures like `404 No endpoints found that support tool use`
 
-You keep using Claude Code normally. Model routing is automatic.
+You keep using your client normally. Model routing is automatic.
 
 ---
 
@@ -40,7 +40,8 @@ You need:
 - `python3` (3.9 or newer recommended)
 - `curl`
 - `git`
-- Claude Code installed and working
+- Claude Code installed and working (if using `claude-free`)
+- OpenCode installed and working (if using `opencode-free`)
 - OpenRouter account
 - OpenRouter API key
 
@@ -95,7 +96,7 @@ Run the installer (adds commands to `~/.local/bin`):
 Pinned (recommended):
 
 ```bash
-VER=v0.3.3
+VER=v0.3.7
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -164,6 +165,8 @@ Run OpenCode through the router:
 opencode-free
 ```
 
+OpenCode virtual models are shown as `Smart Router Build` and `Smart Router Plan`.
+
 The router starts automatically for this session and stops when the client exits.
 
 Check status and last route:
@@ -211,7 +214,6 @@ smart-router upgrade --version v0.3.0
 Help output notes:
 
 - `smart-router -h` and all subcommand help screens include the shared Notes section.
-- Help screens also include the `<system-reminder>...</system-reminder>` block.
 
 Upgrades keep your saved API key at `~/.config/smart-openrouter-router/api_key`.
 You only need to run `smart-router setup` again if:
@@ -335,10 +337,10 @@ The proxy chooses and retries automatically.
 
 ## 10) How to see which real model was used
 
-After any Claude Code request:
+After any request:
 
 ```bash
-router-last
+smart-router last
 ```
 
 This shows fields like:
@@ -357,7 +359,7 @@ This shows fields like:
 You can also view status summary:
 
 ```bash
-router-status
+smart-router status
 ```
 
 And logs:
@@ -374,7 +376,7 @@ Sometimes a `:free` model can still fail on a specific provider (for example quo
 
 The router now retries next ranked free models automatically.
 
-It also retries tool-endpoint failures for Claude Code, including:
+It also retries tool-endpoint failures for client tool requests, including:
 
 - `404 No endpoints found that support tool use`
 - provider quota/rate/spend failures on intermediate candidates
@@ -387,7 +389,7 @@ Example flow:
 4. If needed, continue down ranked list
 5. Return first successful result
 
-This makes Claude Code usage much more reliable.
+This makes usage much more reliable.
 
 ---
 
@@ -414,7 +416,7 @@ This makes Claude Code usage much more reliable.
 
 ## 13) Common issues and fixes
 
-### A) `router-last: command not found`
+### A) `smart-router last: command not found`
 
 Run:
 
@@ -422,7 +424,7 @@ Run:
 source ~/.zshrc
 ```
 
-Then retry.
+Then retry `smart-router last`.
 
 ### B) Claude Code auth conflict warning
 
@@ -441,8 +443,8 @@ This may come from a specific provider backend. Router should fallback automatic
 Check details:
 
 ```bash
-router-last
-router-logs
+smart-router last
+smart-router status
 ```
 
 ### G) Claude Code says `smart-router/best` may not exist
@@ -452,7 +454,7 @@ This message is often a downstream provider/tool-endpoint failure, not a missing
 Run:
 
 ```bash
-router-last
+smart-router last
 ```
 
 Check these fields:
@@ -474,8 +476,8 @@ Stop current process or change port in:
 ### E) `No API key` or OpenRouter auth errors
 
 - Run `smart-router setup` and verify the key saves successfully
-- `claude-free` prefers saved key at `~/.config/smart-openrouter-router/api_key`
-- If shell env key differs from saved key, `claude-free` warns and uses saved key
+- `claude-free` and `opencode-free` prefer saved key at `~/.config/smart-openrouter-router/api_key`
+- If shell env key differs from saved key, launcher warns and uses saved key
 - For a clean session, clear old env values and retry:
 
 ```bash
@@ -484,13 +486,15 @@ unset ANTHROPIC_API_KEY
 unset ANTHROPIC_BASE_URL
 unset ANTHROPIC_AUTH_TOKEN
 claude-free
+# or
+opencode-free
 ```
 
-### F) Claude Code still using old settings
+### F) Client still using old settings
 
-- Close Claude Code
+- Close the client
 - Open a fresh terminal
-- Start Claude Code again
+- Start `claude-free` or `opencode-free` again
 
 ---
 

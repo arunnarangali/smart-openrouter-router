@@ -12,6 +12,7 @@ All notable changes to this project are documented in this file.
 - Added explicit key update command: `smart-router key update` (with `--visible` and `--from-env`) for clearer API key replacement workflow.
 - Improved config visibility: `smart-router config view` now warns when preferred lists are empty, `smart-router models` reminds how to save live recommendations, and `/status` exposes `config_source` and `config_preferred_models`.
 - Added `opencode-free` launcher to run OpenCode through the same smart router workflow used by `claude-free`.
+- Updated OpenCode virtual model labels to `Smart Router Build` and `Smart Router Plan`, with agent mapping for OpenCode `build` and `plan` modes.
 
 ### Fixed
 
@@ -19,6 +20,7 @@ All notable changes to this project are documented in this file.
 - Fixed setup "current key" display to reflect the saved key state (`~/.config/smart-openrouter-router/api_key`) instead of possibly showing environment-only key context.
 - Fixed `claude-free` key precedence to prefer saved key file over shell `OPENROUTER_API_KEY`, preventing stale env keys from causing `401 User not found` after key rotation.
 - Fixed OpenCode compatibility for virtual model aliases by treating `best`/`fast` the same as `smart-router/best` and `smart-router/fast` in runtime candidate selection.
+- Fixed OpenCode alias compatibility by mapping `build`/`plan` (and `smart-router/build`/`smart-router/plan`) to existing smart routing tiers.
 
 ## v0.3.3
 

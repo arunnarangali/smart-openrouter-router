@@ -6,7 +6,7 @@ Smart local proxy for Claude Code and OpenCode that routes requests to the best 
 
 ## Quick Start (Beginner)
 
-Install once, then run Claude Code through the router.
+Install once, then run Claude Code or OpenCode through the router.
 
 ```bash
 ./install.sh
@@ -51,6 +51,8 @@ claude-free
 ```bash
 opencode-free
 ```
+
+`opencode-free` exposes OpenCode-friendly virtual models: `Smart Router Build` and `Smart Router Plan`.
 
 The router starts automatically for this session and stops when the client exits.
 
@@ -105,7 +107,7 @@ On upgrade, installer next steps only suggest `smart-router setup` when a saved 
 Pinned (recommended):
 
 ```bash
-VER=v0.3.3
+VER=v0.3.7
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -132,11 +134,11 @@ For complete step-by-step setup, prerequisites, troubleshooting, and operations,
 
 ## How it works
 
-Claude Code sends requests to `ANTHROPIC_BASE_URL`.
+Claude Code or OpenCode sends requests to the local router endpoint.
 
 This router sits in the middle:
 
-`Claude Code -> localhost:8080 -> OpenRouter`
+`Client (Claude/OpenCode) -> localhost:<auto-port> -> OpenRouter`
 
 For each request, it:
 
@@ -263,12 +265,12 @@ This can happen on specific OpenRouter providers even for `:free` models.
 The router now retries next ranked free models automatically. Check fallback chain with:
 
 ```bash
-router-last
+smart-router last
 ```
 
 ### Claude Code says model may not exist
 
-If Claude Code shows `smart-router/best may not exist`, check `router-last`.
+If Claude Code shows `smart-router/best may not exist`, check `smart-router last`.
 
 This usually means OpenRouter returned a provider/tool-endpoint error, not that the local virtual model is missing.
 
@@ -303,7 +305,7 @@ claude-free
 
 ### Port already in use
 
-If `8080` is occupied, stop existing process or change `PROXY_PORT` in `smart_router.py` and `smart_router_start.sh`.
+Modern launchers (`claude-free` / `opencode-free`) pick a free local port automatically. `8080` applies only to legacy/manual setup.
 
 ## Security
 
