@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.7
+
+### Fixed
+
+- Added single auto-select model to OpenCode config so models show in dropdown.
+- Router still decides which free model to use for each request.
+
 ## v0.4.6
 
 ### Added
