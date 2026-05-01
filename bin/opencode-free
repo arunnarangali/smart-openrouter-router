@@ -151,17 +151,7 @@ def runtime_opencode_config(port: int, api_key: str) -> str:
                     "baseURL": f"http://127.0.0.1:{port}/v1",
                     "apiKey": api_key,
                 },
-                "models": {
-                    "build": {"id": "smart-router/best", "name": "Smart Router Build"},
-                    "plan": {"id": "smart-router/best", "name": "Smart Router Plan"},
-                },
             }
-        },
-        "model": "smart-router/best",
-        "small_model": "smart-router/fast",
-        "agent": {
-            "build": {"model": "smart-router/best"},
-            "plan": {"model": "smart-router/best"},
         },
     }
     return json.dumps(payload)

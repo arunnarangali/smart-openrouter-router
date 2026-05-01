@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.5
+
+### Fixed
+
+- Removed explicit model IDs from OpenCode launcher config so OpenCode no longer rejects smart-router aliases.
+- Router now handles model selection; OpenCode sends requests to the smart-router provider without predefined model mappings.
+
 ## v0.4.3
 
 ### Fixed
