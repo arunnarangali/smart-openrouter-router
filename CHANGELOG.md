@@ -2,7 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## v0.3.9
+
+### Added
+
+- Added tracked `bin/opencode-free` launcher and installer support for running OpenCode through the smart router.
 
 ### Changed
 
@@ -12,6 +16,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Fixed launcher startup crashes when router readiness checks hit slow `/status` responses.
+- Fixed router `/status` to return quickly without blocking on the initial OpenRouter model fetch.
 - Fixed setup key replacement flow in `bin/smart-router` so new keys are verified before write; failed verification no longer overwrites the saved key.
 - Fixed setup "current key" display to reflect the saved key state (`~/.config/smart-openrouter-router/api_key`) instead of possibly showing environment-only key context.
 

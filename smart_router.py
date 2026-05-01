@@ -77,6 +77,10 @@ class ModelCache:
         with self._lock:
             return time.time() - self._last_fetch if self._last_fetch else -1
 
+    def get_cached_models(self):
+        with self._lock:
+            return list(self._models)
+
     def get_free_models(self, api_key):
         with self._lock:
             if self._models and time.time() - self._last_fetch < CACHE_TTL:
@@ -759,7 +763,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
     def _status(self):
         api_key = self._api_key()
-        free_models = model_cache.get_free_models(api_key) if api_key else []
+        free_models = model_cache.get_cached_models()
+        if api_key and not free_models:
+            threading.Thread(target=model_cache.get_free_models, args=(api_key,), daemon=True).start()
         top_per_scenario = {}
         router_config = load_router_config()
         cooldowns = load_cooldowns()

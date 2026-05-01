@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Run Claude Code with smart-openrouter-router.
+"""Run OpenCode with smart-openrouter-router.
 
-Starts the router on a free local port, runs Claude with env overrides,
-and stops the router when Claude exits.
+Starts the router on a free local port, runs OpenCode with provider overrides,
+and stops the router when OpenCode exits.
 """
 
 from __future__ import annotations
@@ -45,11 +45,16 @@ def ensure_dirs() -> None:
 
 
 def read_api_key() -> str:
+    saved_key = KEY_FILE.read_text(encoding="utf-8").strip() if KEY_FILE.exists() else ""
     env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+
+    if saved_key and env_key and saved_key != env_key:
+        eprint("Saved key and OPENROUTER_API_KEY differ. Using saved key from config.")
+
+    if saved_key:
+        return saved_key
     if env_key:
         return env_key
-    if KEY_FILE.exists():
-        return KEY_FILE.read_text(encoding="utf-8").strip()
     return ""
 
 
@@ -135,9 +140,36 @@ def print_tail_log(lines: int = 40) -> None:
     eprint("--- end log ---\n")
 
 
+def runtime_opencode_config(port: int, api_key: str) -> str:
+    payload = {
+        "$schema": "https://opencode.ai/config.json",
+        "provider": {
+            "smart-router": {
+                "npm": "@ai-sdk/openai-compatible",
+                "name": "Smart Router",
+                "options": {
+                    "baseURL": f"http://127.0.0.1:{port}/v1",
+                    "apiKey": api_key,
+                },
+                "models": {
+                    "build": {"name": "Smart Router Build"},
+                    "plan": {"name": "Smart Router Plan"},
+                },
+            }
+        },
+        "model": "smart-router/build",
+        "small_model": "smart-router/plan",
+        "agent": {
+            "build": {"model": "smart-router/build"},
+            "plan": {"model": "smart-router/plan"},
+        },
+    }
+    return json.dumps(payload)
+
+
 def main() -> int:
-    if not shutil.which("claude"):
-        eprint("Claude Code not found in PATH. Install it and try again.")
+    if not shutil.which("opencode"):
+        eprint("OpenCode not found in PATH. Install it and try again.")
         return 1
 
     ensure_dirs()
@@ -163,13 +195,8 @@ def main() -> int:
         write_active(port, proc.pid)
 
         env = os.environ.copy()
-        env.pop("ANTHROPIC_AUTH_TOKEN", None)  # Prevent Claude Code auth conflict
         env["OPENROUTER_API_KEY"] = api_key
-        env["ANTHROPIC_API_KEY"] = api_key
-        env["ANTHROPIC_BASE_URL"] = f"http://127.0.0.1:{port}"
-        env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = "smart-router/best"
-        env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "smart-router/best"
-        env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = "smart-router/fast"
+        env["OPENCODE_CONFIG_CONTENT"] = runtime_opencode_config(port, api_key)
 
         def handle_signal(_signum, _frame):
             stop_router(proc)
@@ -178,7 +205,7 @@ def main() -> int:
         signal.signal(signal.SIGINT, handle_signal)
         signal.signal(signal.SIGTERM, handle_signal)
 
-        result = subprocess.run(["claude", *sys.argv[1:]], env=env)
+        result = subprocess.run(["opencode", *sys.argv[1:]], env=env)
         return result.returncode
     finally:
         stop_router(proc)

@@ -32,6 +32,7 @@ OPENROUTER_API_KEY="sk-or-..." smart-router setup --from-env
 
 ```bash
 claude-free
+opencode-free
 ```
 
 The router starts automatically for this session and stops when Claude exits.
@@ -46,6 +47,12 @@ smart-router config view
 smart-router models
 smart-router cooldowns
 smart-router stats
+```
+
+OpenCode:
+
+```bash
+opencode-free
 ```
 
 Installer/developer verification:
@@ -153,6 +160,7 @@ For Claude Code tool/agent requests, it also:
 
 - `smart_router.py` - router server
 - `bin/claude-free` - starts router and runs Claude Code
+- `bin/opencode-free` - starts router and runs OpenCode
 - `bin/smart-router` - setup/status/last/reset CLI
 - `install.sh` - installer (puts commands in `~/.local/bin`)
 - `legacy/` - legacy files (`smart_router_start.sh`, `test_router.sh`, `zshrc_snippet.sh`)
@@ -194,6 +202,7 @@ source ~/.zshrc
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `claude-free` - run Claude Code through the router
+- `opencode-free` - run OpenCode through the router
 
 ### Config Refresh
 

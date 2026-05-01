@@ -3,6 +3,8 @@
 ## Main CLI
 
 - `smart-router` - Smart Router helper CLI
+- `claude-free` - Run Claude Code through the router
+- `opencode-free` - Run OpenCode through the router
 
 ## Setup
 
