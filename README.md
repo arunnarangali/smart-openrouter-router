@@ -84,6 +84,7 @@ Upgrades keep your saved API key at `~/.config/smart-openrouter-router/api_key`.
 You only need to run `smart-router setup` again if:
 
 - you ran `smart-router reset --all`
+- you ran `smart-router uninstall`
 - you deleted `~/.config/smart-openrouter-router/`
 - you only use `OPENROUTER_API_KEY` in the current shell/session
 
@@ -201,6 +202,7 @@ source ~/.zshrc
 - `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
+- `smart-router uninstall` - fully remove installed commands and local state
 - `claude-free` - run Claude Code through the router
 - `opencode-free` - run OpenCode through the router
 
@@ -218,7 +220,8 @@ Use `smart-router models` to view current best live free models without modifyin
 ### Reset behavior
 
 - `smart-router reset` stops the router and clears runtime state (keeps API key)
-- `smart-router reset --all` removes key and installed commands
+- `smart-router reset --all` removes installed commands and all local state
+- `smart-router uninstall` removes installed commands, installed share files, and local config/cache (includes saved key)
 
 ## Verify
 

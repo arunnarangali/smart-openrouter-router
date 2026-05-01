@@ -34,6 +34,8 @@
 
 - `smart-router reset` - Reset runtime state
 - `smart-router reset --all` - Remove saved key/config and uninstall commands
+- `smart-router uninstall` - Remove installed commands and all local state
+- `smart-router uninstall --yes` - Skip uninstall confirmation prompt
 
 ## Config
 

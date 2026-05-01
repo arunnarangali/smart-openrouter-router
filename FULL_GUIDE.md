@@ -381,13 +381,15 @@ This makes Claude Code usage much more reliable.
 - `smart-router stats` / `smart-router stats reset` - performance stats visibility/control
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
+- `smart-router uninstall` - remove installed commands and local state
 - `claude-free` - run Claude Code through the router
 - `opencode-free` - run OpenCode through the router
 
 ### Reset behavior
 
 - `smart-router reset` stops the router and clears runtime state (keeps API key)
-- `smart-router reset --all` removes key and installed commands
+- `smart-router reset --all` removes installed commands and local state
+- `smart-router uninstall` removes installed commands, installed share files, and local config/cache (includes saved key)
 
 ---
 
@@ -518,8 +520,21 @@ router-restart
 1. **Modern install:**
 
 ```bash
-smart-router reset --all
+smart-router uninstall
 ```
+
+Or non-interactive:
+
+```bash
+smart-router uninstall --yes
+```
+
+This removes:
+
+- installed commands in `~/.local/bin`
+- installed share files in `~/.local/share/smart-openrouter-router`
+- local config in `~/.config/smart-openrouter-router`
+- local cache in `~/.cache/smart-openrouter-router`
 
 2. **Legacy manual setup:**
    - Remove router block from `~/.zshrc`

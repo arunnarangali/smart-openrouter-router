@@ -400,7 +400,7 @@ def cmd_upgrade(args: argparse.Namespace) -> int:
     return run_upgrade(target, install_prefix())
 
 
-def cmd_reset(args: argparse.Namespace) -> int:
+def stop_router() -> None:
     ensure_dirs()
     active = load_active()
     pid = active.get("pid")
@@ -411,28 +411,76 @@ def cmd_reset(args: argparse.Namespace) -> int:
         except OSError:
             pass
 
+
+def remove_path(path: Path) -> None:
+    if not path.exists():
+        return
+    try:
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+    except OSError as exc:
+        eprint(f"Failed to remove {path}: {exc}")
+
+
+def uninstall_targets(prefix: Path) -> list[Path]:
+    bin_dir = prefix / "bin"
+    share_dir = prefix / "share" / "smart-openrouter-router"
+    return [
+        bin_dir / "smart-router",
+        bin_dir / "claude-free",
+        bin_dir / "opencode-free",
+        share_dir,
+        CONFIG_DIR,
+        CACHE_DIR,
+    ]
+
+
+def confirm_uninstall(targets: list[Path], assume_yes: bool) -> bool:
+    eprint("This will remove the following paths:")
+    for path in targets:
+        eprint(f"  - {path}")
+    if assume_yes:
+        return True
+    if not sys.stdin.isatty():
+        eprint("Refusing to uninstall without confirmation (non-interactive shell). Use --yes.")
+        return False
+    eprint("This action is permanent.")
+    answer = input("Continue? [y/N] ").strip().lower()
+    return answer in {"y", "yes"}
+
+
+def cmd_uninstall(args: argparse.Namespace) -> int:
+    prefix = install_prefix()
+    marker = prefix / "share" / "smart-openrouter-router" / "VERSION"
+    if not marker.exists():
+        eprint("Install marker not found. Run the installed smart-router from your PATH.")
+        return 1
+
+    stop_router()
+    targets = uninstall_targets(prefix)
+    if not confirm_uninstall(targets, args.yes):
+        eprint("Uninstall cancelled.")
+        return 1
+    for path in targets:
+        remove_path(path)
+    eprint("Uninstall complete.")
+    return 0
+
+
+def cmd_reset(args: argparse.Namespace) -> int:
+    if args.all:
+        uninstall_args = argparse.Namespace(yes=True)
+        return cmd_uninstall(uninstall_args)
+
+    stop_router()
     for path in [ACTIVE_FILE, LOG_FILE, COOLDOWNS_FILE, STATS_FILE]:
         if path.exists():
             try:
                 path.unlink()
             except OSError:
                 pass
-
-    if args.all:
-        for path in [KEY_FILE, CONFIG_FILE]:
-            if path.exists():
-                try:
-                    path.unlink()
-                except OSError:
-                    pass
-        for path in [Path.home() / ".local" / "bin" / "claude-free", Path.home() / ".local" / "bin" / "smart-router"]:
-            if path.exists():
-                try:
-                    path.unlink()
-                except OSError:
-                    pass
-        eprint("Reset complete (all). Run install.sh to set up again.")
-        return 0
 
     eprint("Reset complete. Your API key is preserved.")
     return 0
@@ -601,6 +649,15 @@ def build_parser() -> argparse.ArgumentParser:
     reset = sub.add_parser("reset", help="Reset runtime state", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     reset.add_argument("--all", action="store_true", help="Remove saved key/config and uninstall commands")
     reset.set_defaults(func=cmd_reset)
+
+    uninstall = sub.add_parser(
+        "uninstall",
+        help="Remove installed commands and all local state",
+        epilog=HELP_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    uninstall.add_argument("--yes", action="store_true", help="Skip confirmation prompt")
+    uninstall.set_defaults(func=cmd_uninstall)
 
     config = sub.add_parser("config", help="Manage router config", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     cfg_sub = config.add_subparsers(dest="config_cmd", required=True)

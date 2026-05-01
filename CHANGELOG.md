@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.1
+
+### Added
+
+- Added `smart-router uninstall` for fully removing installed commands and local state with confirmation (supports `--yes`).
+
+### Changed
+
+- `smart-router reset --all` now performs a full uninstall (including `opencode-free` and local config/cache removal).
+
 ## v0.4.0
 
 ### Added
