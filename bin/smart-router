@@ -305,16 +305,18 @@ def save_config(cfg: dict) -> None:
 def cmd_setup(args: argparse.Namespace) -> int:
     ensure_dirs()
     current_key = read_saved_api_key()
-    current_state = "saved" if current_key else "none"
     eprint("Setting up OpenRouter API key...")
-    eprint(f"Saved key: {current_state}")
+    if current_key:
+        eprint("Existing saved key found. It will be replaced only after the new key is verified.")
+    else:
+        eprint("No saved key found. A new key will be stored after verification.")
     key = ""
     if args.from_env:
         key = os.environ.get("OPENROUTER_API_KEY", "").strip()
         if not key:
             eprint("OPENROUTER_API_KEY is not set.")
             return 1
-        eprint("Reading new key from OPENROUTER_API_KEY environment variable.")
+        eprint("Reading replacement key from OPENROUTER_API_KEY environment variable.")
     else:
         try:
             if args.visible:
@@ -332,13 +334,16 @@ def cmd_setup(args: argparse.Namespace) -> int:
         eprint("No key provided.")
         return 1
 
-    eprint("Verifying new key...")
+    eprint("Verifying new key with OpenRouter...")
     if not verify_key(key):
-        eprint("Verification failed. Saved key was not changed.")
+        eprint("Verification failed. Old saved key was not replaced.")
         return 1
 
     write_api_key(key)
-    eprint("New key saved and verified successfully.")
+    if current_key:
+        eprint("New key verified. Old saved key replaced successfully.")
+    else:
+        eprint("New key verified and saved successfully.")
     return 0
 
 

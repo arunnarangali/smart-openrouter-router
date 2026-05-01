@@ -7,6 +7,8 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - Improved `smart-router setup` UX to clearly show setup context, saved-key state, hidden/visible input mode, and environment-driven setup messaging.
+- Refined setup replacement messaging to explicitly state old-key replacement behavior on verify success/failure.
+- Added `CLI_COMMANDS.md` with grouped terminal command/help descriptions.
 
 ### Fixed
 
