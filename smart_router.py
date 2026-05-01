@@ -553,6 +553,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return
 
         body = self._read_json_body()
+        accept_header = (self.headers.get("Accept") or "").lower()
+        stream_requested = bool(body.get("stream")) or "text/event-stream" in accept_header
         scenario = detect_scenario(body.get("messages", []))
         free_models = model_cache.get_free_models(api_key)
 
@@ -593,12 +595,15 @@ class ProxyHandler(BaseHTTPRequestHandler):
         final_content_type = "application/json"
         final_model = ""
         final_latency_ms = None
+        streamed = False
 
         for index, chosen in enumerate(candidates):
             attempt_started = time.time()
             attempt_body = dict(body)
             attempt_body["model"] = chosen
             attempt_body.pop("anthropic_version", None)
+            if stream_requested:
+                attempt_body["stream"] = True
 
             log.info(
                 "Routing %s to %s via model=%s scenario=%s tier=%s requested=%s attempt=%d/%d",
@@ -627,12 +632,24 @@ class ProxyHandler(BaseHTTPRequestHandler):
             try:
                 with urlopen(req, timeout=120) as resp:
                     final_status = resp.status
-                    final_body = resp.read()
                     final_content_type = resp.headers.get("Content-Type", "application/json")
                     final_model = chosen
                     latency_ms = int((time.time() - attempt_started) * 1000)
                     final_latency_ms = latency_ms
                     update_stats(chosen, True, latency_ms, final_status)
+                    if stream_requested:
+                        self._proxy_stream(
+                            resp,
+                            final_status,
+                            final_content_type,
+                            model=final_model,
+                            scenario=scenario,
+                            retry_count=len(failed_models),
+                        )
+                        streamed = True
+                        final_body = b""
+                        break
+                    final_body = resp.read()
                 break
             except HTTPError as exc:
                 err_body = exc.read()
@@ -716,6 +733,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
             latency_ms=final_latency_ms,
             cooldowns_added=cooldowns_added,
         )
+        if streamed:
+            return
         self._proxy_response(
             final_status,
             final_body,
@@ -836,6 +855,27 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.send_header("X-Smart-Router-Retry-Count", str(retry_count))
         self.end_headers()
         self.wfile.write(body)
+
+    def _proxy_stream(self, resp, code, content_type=None, model=None, scenario=None, retry_count=0):
+        self.send_response(code)
+        self.send_header("Content-Type", content_type or "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        if model:
+            self.send_header("X-Smart-Router-Model", model)
+        if scenario:
+            self.send_header("X-Smart-Router-Scenario", scenario)
+        self.send_header("X-Smart-Router-Retry-Count", str(retry_count))
+        self.send_header("Connection", "close")
+        self.end_headers()
+        try:
+            while True:
+                chunk = resp.read(8192)
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _json(self, code, data):
         body = json.dumps(data, indent=2).encode("utf-8")

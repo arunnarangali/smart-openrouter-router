@@ -66,3 +66,8 @@ Notes:
     the current shell/session
   - smart-router upgrade --check exit codes: 0 up-to-date, 2 upgrade available, 1 error
 ```
+
+## Streaming
+
+- If a client sends `stream=true` or `Accept: text/event-stream`, the router forwards chunks as they arrive.
+- Retries only occur before streaming starts; the router cannot switch models mid-stream.

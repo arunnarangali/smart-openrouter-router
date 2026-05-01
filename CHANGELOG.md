@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.3
+
+### Fixed
+
+- Added streaming passthrough for OpenAI-compatible requests so OpenCode output appears incrementally when `stream=true`.
+
 ## v0.4.1
 
 ### Added
