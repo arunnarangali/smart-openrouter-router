@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.0
+
+### Added
+
+- Added official `opencode-free` launcher support to the repository and installer so OpenCode can run through the smart router.
+
+### Fixed
+
+- Improved launcher startup reliability by retrying slow router readiness checks instead of crashing on timeout.
+- Made router `/status` return quickly without blocking on the initial OpenRouter free-model fetch.
+
+### Documentation
+
+- Updated `README.md`, `FULL_GUIDE.md`, and `CLI_COMMANDS.md` to include OpenCode launcher usage and command references.
+
+### Notes
+
+- This release serves as the first consolidated public release note and highlights capabilities accumulated across previous versions.
+
 ## v0.3.9
 
 ### Added
