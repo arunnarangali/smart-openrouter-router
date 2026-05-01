@@ -45,11 +45,16 @@ def ensure_dirs() -> None:
 
 
 def read_api_key() -> str:
+    saved_key = KEY_FILE.read_text(encoding="utf-8").strip() if KEY_FILE.exists() else ""
     env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+
+    if saved_key and env_key and saved_key != env_key:
+        eprint("Saved key and OPENROUTER_API_KEY differ. Using saved key from config.")
+
+    if saved_key:
+        return saved_key
     if env_key:
         return env_key
-    if KEY_FILE.exists():
-        return KEY_FILE.read_text(encoding="utf-8").strip()
     return ""
 
 

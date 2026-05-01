@@ -256,6 +256,22 @@ If you see both `ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_API_KEY` set, ensure this 
 unset ANTHROPIC_AUTH_TOKEN
 ```
 
+### `401 User not found` after updating key
+
+If you updated your key but still get `401 User not found`, your shell may still have an old `OPENROUTER_API_KEY`.
+
+`claude-free` now prefers the saved key at `~/.config/smart-openrouter-router/api_key` and prints a warning when env and saved keys differ.
+
+Quick reset for current terminal:
+
+```bash
+unset OPENROUTER_API_KEY
+unset ANTHROPIC_API_KEY
+unset ANTHROPIC_BASE_URL
+unset ANTHROPIC_AUTH_TOKEN
+claude-free
+```
+
 ### Port already in use
 
 If `8080` is occupied, stop existing process or change `PROXY_PORT` in `smart_router.py` and `smart_router_start.sh`.

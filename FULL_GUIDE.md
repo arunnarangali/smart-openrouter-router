@@ -448,9 +448,18 @@ Stop current process or change port in:
 
 ### E) `No API key` or OpenRouter auth errors
 
-- Verify `OPENROUTER_API_KEY` in `.zshrc`
-- Run `source ~/.zshrc`
-- Retry `router-status`
+- Run `smart-router setup` and verify the key saves successfully
+- `claude-free` prefers saved key at `~/.config/smart-openrouter-router/api_key`
+- If shell env key differs from saved key, `claude-free` warns and uses saved key
+- For a clean session, clear old env values and retry:
+
+```bash
+unset OPENROUTER_API_KEY
+unset ANTHROPIC_API_KEY
+unset ANTHROPIC_BASE_URL
+unset ANTHROPIC_AUTH_TOKEN
+claude-free
+```
 
 ### F) Claude Code still using old settings
 

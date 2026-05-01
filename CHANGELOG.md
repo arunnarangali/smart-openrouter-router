@@ -14,6 +14,7 @@ All notable changes to this project are documented in this file.
 
 - Fixed setup key replacement flow in `bin/smart-router` so new keys are verified before write; failed verification no longer overwrites the saved key.
 - Fixed setup "current key" display to reflect the saved key state (`~/.config/smart-openrouter-router/api_key`) instead of possibly showing environment-only key context.
+- Fixed `claude-free` key precedence to prefer saved key file over shell `OPENROUTER_API_KEY`, preventing stale env keys from causing `401 User not found` after key rotation.
 
 ## v0.3.3
 
