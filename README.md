@@ -95,7 +95,7 @@ On upgrade, installer next steps only suggest `smart-router setup` when a saved 
 Pinned (recommended):
 
 ```bash
-VER=v0.3.3
+VER=<release-tag>
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
