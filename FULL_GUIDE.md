@@ -120,7 +120,9 @@ Now set your OpenRouter key:
 smart-router setup
 ```
 
-Note: the prompt is hidden (no characters will appear). Paste the key and press Enter.
+`smart-router setup` verifies the new key before saving it and replaces any previously saved key only after verification succeeds.
+
+Note: the default prompt is hidden (no characters will appear). Paste the key and press Enter.
 
 If you prefer visible input:
 
