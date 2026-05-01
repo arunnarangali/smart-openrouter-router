@@ -39,6 +39,16 @@ Optional:
 ```bash
 smart-router status
 smart-router last
+smart-router config refresh
+smart-router config view
+smart-router cooldowns
+smart-router stats
+```
+
+Installer/developer verification:
+
+```bash
+bash test_install_flow.sh
 ```
 
 Upgrade helpers:
@@ -47,7 +57,7 @@ Upgrade helpers:
 smart-router version
 smart-router upgrade --check
 smart-router upgrade
-smart-router upgrade --version v0.2.9
+smart-router upgrade --version v0.3.0
 ```
 
 `smart-router upgrade --check` exit codes:
@@ -75,7 +85,7 @@ On upgrade, installer next steps only suggest `smart-router setup` when a saved 
 Pinned (recommended):
 
 ```bash
-VER=v0.2.9
+VER=v0.3.0
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -177,9 +187,21 @@ source ~/.zshrc
 - `smart-router setup` - store and verify OpenRouter key
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
+- `smart-router config path|view|explain|reset|refresh` - config management
+- `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
+- `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `claude-free` - run Claude Code through the router
+
+### Config Refresh
+
+`smart-router config refresh` fetches live OpenRouter free models and updates preferred
+lists for coding, reasoning, writing, and fast profiles in:
+
+- `~/.config/smart-openrouter-router/config.json`
+
+The router still enforces free-only filtering at runtime.
 
 ### Reset behavior
 
@@ -188,7 +210,13 @@ source ~/.zshrc
 
 ## Verify
 
-Run full verification (legacy/manual):
+Run installer-flow verification (recommended):
+
+```bash
+bash test_install_flow.sh
+```
+
+Run full verification for legacy/manual setup:
 
 ```bash
 bash ~/test_router.sh

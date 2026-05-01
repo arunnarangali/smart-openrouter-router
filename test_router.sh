@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Legacy/manual setup verification script.
+# For installer-based verification, use: bash test_install_flow.sh
+
 PROXY="http://127.0.0.1:8080"
 PASS=0
 FAIL=0

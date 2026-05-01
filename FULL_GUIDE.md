@@ -71,7 +71,8 @@ Repository files:
 
 - `smart_router.py` - main proxy server
 - `smart_router_start.sh` - auto-start script
-- `test_router.sh` - full verification test
+- `test_install_flow.sh` - installer-flow verification (recommended)
+- `test_router.sh` - legacy/manual verification
 - `zshrc_snippet.sh` - shell setup block
 - `README.md` - quick guide
 - `FULL_GUIDE.md` - this complete guide
@@ -91,7 +92,7 @@ Run the installer (adds commands to `~/.local/bin`):
 Pinned (recommended):
 
 ```bash
-VER=v0.2.9
+VER=v0.3.0
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
@@ -144,7 +145,24 @@ Check status and last route:
 ```bash
 smart-router status
 smart-router last
+smart-router config refresh
+smart-router config view
+smart-router cooldowns
+smart-router stats
 ```
+
+Config command summary:
+
+```bash
+smart-router config path
+smart-router config view
+smart-router config explain
+smart-router config reset
+smart-router config refresh
+```
+
+- `config refresh` updates preferred model recommendations from live OpenRouter free models.
+- Router still enforces free-only filtering at request time.
 
 Check and upgrade versions:
 
@@ -152,7 +170,7 @@ Check and upgrade versions:
 smart-router version
 smart-router upgrade --check
 smart-router upgrade
-smart-router upgrade --version v0.2.9
+smart-router upgrade --version v0.3.0
 ```
 
 `smart-router upgrade --check` exit codes:
@@ -250,7 +268,13 @@ bash ~/smart_router_start.sh
 
 ## 8) Verify end-to-end setup
 
-Run the full test suite:
+Run installer-flow verification (recommended):
+
+```bash
+bash test_install_flow.sh
+```
+
+Run full legacy/manual suite only if you use the legacy `.zshrc` flow:
 
 ```bash
 bash ~/test_router.sh
@@ -341,6 +365,9 @@ This makes Claude Code usage much more reliable.
 - `smart-router setup` - store and verify OpenRouter key
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
+- `smart-router config path|view|explain|reset|refresh` - config file management
+- `smart-router cooldowns` / `smart-router cooldowns clear` - cooldown visibility/control
+- `smart-router stats` / `smart-router stats reset` - performance stats visibility/control
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `claude-free` - run Claude Code through the router

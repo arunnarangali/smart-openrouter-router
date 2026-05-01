@@ -16,13 +16,21 @@ need_cmd curl
 need_cmd tar
 need_cmd python3
 
+TMP_DIR="$(mktemp -d)"
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
+
 if [ "$VERSION" = "latest" ]; then
   echo "Installing latest release (not pinned)." >&2
-  TAG=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | python3 - <<'PY'
+  curl -fsSL -o "$TMP_DIR/latest.json" "https://api.github.com/repos/$REPO/releases/latest"
+  TAG=$(python3 - "$TMP_DIR/latest.json" <<'PY'
 import json
 import sys
+from pathlib import Path
 
-data = json.loads(sys.stdin.read())
+data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 print(data.get("tag_name", ""))
 PY
   )
@@ -38,12 +46,6 @@ ARCHIVE="smart-openrouter-router-${TAG}.tar.gz"
 BASE_URL="https://github.com/$REPO/releases/download/$TAG"
 ARCHIVE_URL="$BASE_URL/$ARCHIVE"
 CHECKSUM_URL="$BASE_URL/SHA256SUMS"
-
-TMP_DIR="$(mktemp -d)"
-cleanup() {
-  rm -rf "$TMP_DIR"
-}
-trap cleanup EXIT
 
 curl -fsSL -o "$TMP_DIR/$ARCHIVE" "$ARCHIVE_URL"
 curl -fsSL -o "$TMP_DIR/SHA256SUMS" "$CHECKSUM_URL"

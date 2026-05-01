@@ -22,10 +22,16 @@ from urllib.request import Request, urlopen
 
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "smart-openrouter-router"
 CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "smart-openrouter-router"
-SHARE_DIR = Path.home() / ".local" / "share" / "smart-openrouter-router"
 KEY_FILE = CONFIG_DIR / "api_key"
 ACTIVE_FILE = CACHE_DIR / "active.json"
 LOG_FILE = CACHE_DIR / "router.log"
+
+
+def install_prefix() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
+SHARE_DIR = install_prefix() / "share" / "smart-openrouter-router"
 ROUTER_SCRIPT = SHARE_DIR / "smart_router.py"
 
 

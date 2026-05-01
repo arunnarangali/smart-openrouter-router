@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -24,6 +25,11 @@ OPENROUTER_ORIGIN = "https://openrouter.ai"
 OPENROUTER_API_BASE = f"{OPENROUTER_ORIGIN}/api/v1"
 CACHE_TTL = 1800
 LOG_FILE = os.environ.get("SMART_ROUTER_LOG", os.path.expanduser("~/.smart_router.log"))
+CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "smart-openrouter-router"
+CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "smart-openrouter-router"
+CONFIG_FILE = CONFIG_DIR / "config.json"
+COOLDOWNS_FILE = CACHE_DIR / "cooldowns.json"
+STATS_FILE = CACHE_DIR / "stats.json"
 
 
 SCENARIO_KEYWORDS = {
@@ -107,6 +113,86 @@ last_route = {}
 last_route_lock = threading.Lock()
 
 
+def default_config():
+    return {
+        "policy": {"mode": "free-only", "allow_paid_fallback": False},
+        "profiles": {
+            "coding": {
+                "preferred": [],
+                "prefer_patterns": ["coder", "code", "qwen", "deepseek", "instruct"],
+                "avoid_patterns": ["vision", "image", "audio", "music", "tiny"],
+                "min_context": 16000,
+            },
+            "reasoning": {
+                "preferred": [],
+                "prefer_patterns": ["reasoning", "think", "r1", "qwq", "qwen", "deepseek"],
+                "avoid_patterns": ["vision", "image", "audio", "music", "tiny"],
+                "min_context": 32000,
+            },
+            "writing": {
+                "preferred": [],
+                "prefer_patterns": ["llama", "gemma", "mistral", "chat", "instruct"],
+                "avoid_patterns": ["coder", "vision", "image", "audio", "music"],
+                "min_context": 8000,
+            },
+            "fast": {
+                "preferred": [],
+                "prefer_patterns": ["flash", "mini", "small", "3b", "4b", "7b", "8b"],
+                "avoid_patterns": ["405b", "120b", "large"],
+                "min_context": 8000,
+            },
+        },
+    }
+
+
+def load_json(path: Path, fallback: dict):
+    if not path.exists():
+        return dict(fallback)
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return dict(fallback)
+
+
+def save_json(path: Path, payload: dict):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def load_router_config():
+    base = default_config()
+    current = load_json(CONFIG_FILE, base)
+    if not isinstance(current, dict):
+        return base
+    merged = base
+    merged.update({k: v for k, v in current.items() if k != "profiles"})
+    current_profiles = current.get("profiles") if isinstance(current.get("profiles"), dict) else {}
+    for name, profile in base["profiles"].items():
+        custom = current_profiles.get(name) if isinstance(current_profiles, dict) else {}
+        if isinstance(custom, dict):
+            p = dict(profile)
+            p.update(custom)
+            merged["profiles"][name] = p
+    return merged
+
+
+def load_cooldowns():
+    data = load_json(COOLDOWNS_FILE, {"models": {}, "providers": {}})
+    if not isinstance(data, dict):
+        return {"models": {}, "providers": {}}
+    data.setdefault("models", {})
+    data.setdefault("providers", {})
+    return data
+
+
+def load_stats():
+    data = load_json(STATS_FILE, {"models": {}})
+    if not isinstance(data, dict):
+        return {"models": {}}
+    data.setdefault("models", {})
+    return data
+
+
 def is_text_chat_model(model):
     architecture = model.get("architecture") or {}
     modality = str(architecture.get("modality") or "").lower()
@@ -169,7 +255,7 @@ def model_supports_tools(model):
     return any(marker in combined for marker in markers)
 
 
-def rank_models(models, scenario, tool_request=False):
+def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=None, stats=None):
     def score(model):
         value = 0.0
         model_id = (model.get("id") or "").lower()
@@ -231,6 +317,41 @@ def rank_models(models, scenario, tool_request=False):
                 value += 35
             else:
                 value -= 15
+
+        if profile:
+            preferred = [str(x) for x in profile.get("preferred", [])]
+            if model.get("id") in preferred:
+                idx = preferred.index(model.get("id"))
+                value += max(20, 60 - idx * 10)
+
+            for p in profile.get("prefer_patterns", []):
+                if str(p).lower() in combined:
+                    value += 8
+            for p in profile.get("avoid_patterns", []):
+                if str(p).lower() in combined:
+                    value -= 20
+
+            min_context = int(profile.get("min_context") or 0)
+            if min_context and ctx < min_context:
+                value -= 25
+
+        if cooldowns:
+            model_cd = cooldowns.get("models", {}).get(model.get("id"), {})
+            until = float(model_cd.get("until", 0) or 0)
+            if until > time.time():
+                value -= 1000
+
+        if stats:
+            model_stats = stats.get("models", {}).get(model.get("id"), {})
+            successes = float(model_stats.get("successes", 0) or 0)
+            failures = float(model_stats.get("failures", 0) or 0)
+            total = successes + failures
+            if total > 0:
+                success_rate = successes / total
+                value += (success_rate - 0.5) * 30
+            avg_latency = float(model_stats.get("avg_latency_ms", 0) or 0)
+            if avg_latency > 0:
+                value -= min(20, avg_latency / 2000)
 
         if "2025" in combined:
             value += 10
@@ -321,6 +442,60 @@ def should_retry(status, body_bytes):
     return any(marker in combined for marker in retry_markers)
 
 
+def cooldown_seconds_for_error(status, message):
+    text = str(message or "").lower()
+    if "free-models-per-day" in text:
+        return 24 * 3600
+    if status == 429:
+        return 30 * 60
+    if status == 402:
+        return 6 * 3600
+    if status == 503:
+        return 15 * 60
+    if status == 404 and ("tool use" in text or "no endpoints found" in text):
+        return 24 * 3600
+    return 10 * 60
+
+
+def update_stats(model_id, success, latency_ms, status):
+    stats = load_stats()
+    models = stats.setdefault("models", {})
+    item = models.setdefault(model_id, {"successes": 0, "failures": 0, "avg_latency_ms": 0, "last_status": 0})
+    if success:
+        item["successes"] = int(item.get("successes", 0)) + 1
+    else:
+        item["failures"] = int(item.get("failures", 0)) + 1
+
+    current_avg = float(item.get("avg_latency_ms", 0) or 0)
+    total = int(item.get("successes", 0)) + int(item.get("failures", 0))
+    if total <= 1:
+        item["avg_latency_ms"] = int(latency_ms)
+    else:
+        item["avg_latency_ms"] = int(((current_avg * (total - 1)) + latency_ms) / total)
+    item["last_status"] = int(status or 0)
+    item["last_updated_at"] = datetime.now(timezone.utc).isoformat()
+    save_json(STATS_FILE, stats)
+
+
+def add_cooldown(model_id, provider, status, reason):
+    cooldowns = load_cooldowns()
+    seconds = cooldown_seconds_for_error(status, reason)
+    until = int(time.time() + seconds)
+    cooldowns.setdefault("models", {})[model_id] = {
+        "until": until,
+        "reason": reason,
+        "status": status,
+        "provider": provider,
+    }
+    if provider:
+        cooldowns.setdefault("providers", {})[provider] = {
+            "until": until,
+            "reason": reason,
+            "status": status,
+        }
+    save_json(COOLDOWNS_FILE, cooldowns)
+
+
 def normalize_openrouter_url(path):
     if path.startswith("/api/v1/") or path == "/api/v1":
         return f"{OPENROUTER_ORIGIN}{path}"
@@ -365,7 +540,20 @@ class ProxyHandler(BaseHTTPRequestHandler):
         if "beta=true" in self.path.lower():
             tool_request = True
 
-        ranked_models = rank_models(free_models, scenario, tool_request=tool_request)
+        router_config = load_router_config()
+        cooldowns = load_cooldowns()
+        stats = load_stats()
+        profile_key = "fast" if str(body.get("model") or "").lower() == "smart-router/fast" else scenario
+        profile = (router_config.get("profiles") or {}).get(profile_key, {})
+
+        ranked_models = rank_models(
+            free_models,
+            scenario,
+            tool_request=tool_request,
+            profile=profile,
+            cooldowns=cooldowns,
+            stats=stats,
+        )
         requested_model_raw = str(body.get("model") or "")
         candidates, routing_tier = select_candidates(ranked_models, requested_model_raw)
         candidates = [c for c in candidates if c]
@@ -381,6 +569,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         final_model = ""
 
         for index, chosen in enumerate(candidates):
+            attempt_started = time.time()
             attempt_body = dict(body)
             attempt_body["model"] = chosen
             attempt_body.pop("anthropic_version", None)
@@ -415,6 +604,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     final_body = resp.read()
                     final_content_type = resp.headers.get("Content-Type", "application/json")
                     final_model = chosen
+                    latency_ms = int((time.time() - attempt_started) * 1000)
+                    update_stats(chosen, True, latency_ms, final_status)
                 break
             except HTTPError as exc:
                 err_body = exc.read()
@@ -426,6 +617,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     "reason": err_details.get("message", "")[:300],
                     "provider": err_details.get("provider", ""),
                 })
+                latency_ms = int((time.time() - attempt_started) * 1000)
+                update_stats(chosen, False, latency_ms, err_status)
+                add_cooldown(chosen, err_details.get("provider", ""), err_status, err_details.get("message", "")[:300])
                 log.warning(
                     "Model failed model=%s status=%s provider=%s reason=%s",
                     chosen,
@@ -449,6 +643,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     "reason": str(exc),
                     "provider": "",
                 })
+                latency_ms = int((time.time() - attempt_started) * 1000)
+                update_stats(chosen, False, latency_ms, 502)
+                add_cooldown(chosen, "", 502, str(exc))
                 log.warning("Model failed model=%s status=502 reason=%s", chosen, str(exc))
 
                 if index < len(candidates) - 1:
@@ -534,13 +731,32 @@ class ProxyHandler(BaseHTTPRequestHandler):
         api_key = self._api_key()
         free_models = model_cache.get_free_models(api_key) if api_key else []
         top_per_scenario = {}
+        router_config = load_router_config()
+        cooldowns = load_cooldowns()
+        stats = load_stats()
         for scenario in ["coding", "reasoning", "writing"]:
-            top_per_scenario[scenario] = [m["id"] for m in rank_models(free_models, scenario, tool_request=False)[:3]] if free_models else []
+            profile = (router_config.get("profiles") or {}).get(scenario, {})
+            top_per_scenario[scenario] = [
+                m["id"]
+                for m in rank_models(
+                    free_models,
+                    scenario,
+                    tool_request=False,
+                    profile=profile,
+                    cooldowns=cooldowns,
+                    stats=stats,
+                )[:3]
+            ] if free_models else []
 
         self._json(200, {
             "status": "running",
             "free_models_cached": len(free_models),
             "cache_age_seconds": int(time.time() - model_cache._last_fetch) if model_cache._last_fetch else None,
+            "policy": (router_config.get("policy") or {}).get("mode", "free-only"),
+            "config_path": str(CONFIG_FILE),
+            "config_updated_at": router_config.get("updated_at"),
+            "cooldowns_active": len((cooldowns.get("models") or {})),
+            "stats_models_tracked": len((stats.get("models") or {})),
             "top_per_scenario": top_per_scenario,
             "last_route": self._get_last_route(),
         })

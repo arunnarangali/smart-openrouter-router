@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TMP_DIR="$(mktemp -d)"
+PREFIX="$TMP_DIR/prefix"
+
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
+
+pass() { printf "PASS  %s\n" "$1"; }
+fail() { printf "FAIL  %s\n" "$1"; exit 1; }
+
+assert_file() {
+  local path="$1"
+  [ -f "$path" ] || fail "Missing file: $path"
+  pass "Found file: $path"
+}
+
+assert_exec() {
+  local path="$1"
+  [ -x "$path" ] || fail "Not executable: $path"
+  pass "Executable: $path"
+}
+
+printf "Running installer-flow checks in temp prefix...\n"
+
+SMART_ROUTER_PREFIX="$PREFIX" SMART_ROUTER_VERSION="test" bash "$ROOT_DIR/install.sh"
+
+BIN_DIR="$PREFIX/bin"
+SHARE_DIR="$PREFIX/share/smart-openrouter-router"
+
+assert_file "$BIN_DIR/claude-free"
+assert_file "$BIN_DIR/smart-router"
+assert_exec "$BIN_DIR/claude-free"
+assert_exec "$BIN_DIR/smart-router"
+
+assert_file "$SHARE_DIR/smart_router.py"
+assert_file "$SHARE_DIR/VERSION"
+
+python3 -m py_compile "$ROOT_DIR/smart_router.py"
+python3 -m py_compile "$ROOT_DIR/bin/smart-router"
+python3 -m py_compile "$ROOT_DIR/bin/claude-free"
+pass "Python syntax checks passed"
+
+bash -n "$ROOT_DIR/install.sh"
+bash -n "$ROOT_DIR/smart-router-install.sh"
+bash -n "$ROOT_DIR/test_router.sh"
+bash -n "$ROOT_DIR/test_install_flow.sh"
+pass "Shell syntax checks passed"
+
+if "$BIN_DIR/smart-router" --help | grep -qi "system-reminder"; then
+  fail "CLI help leaked system-reminder block"
+fi
+pass "CLI help does not leak system-reminder block"
+
+"$BIN_DIR/smart-router" version >/dev/null
+pass "smart-router version command works"
+
+if "$BIN_DIR/smart-router" setup --help >/dev/null; then
+  pass "smart-router setup help works"
+else
+  fail "smart-router setup help failed"
+fi
+
+if "$BIN_DIR/smart-router" config path >/dev/null; then
+  pass "smart-router config path works"
+else
+  fail "smart-router config path failed"
+fi
+
+if "$BIN_DIR/smart-router" config explain >/dev/null; then
+  pass "smart-router config explain works"
+else
+  fail "smart-router config explain failed"
+fi
+
+if "$BIN_DIR/smart-router" config reset >/dev/null; then
+  pass "smart-router config reset works"
+else
+  fail "smart-router config reset failed"
+fi
+
+if "$BIN_DIR/smart-router" config view >/dev/null; then
+  pass "smart-router config view works"
+else
+  fail "smart-router config view failed"
+fi
+
+if "$BIN_DIR/smart-router" cooldowns >/dev/null; then
+  pass "smart-router cooldowns works"
+else
+  fail "smart-router cooldowns failed"
+fi
+
+if "$BIN_DIR/smart-router" stats >/dev/null; then
+  pass "smart-router stats works"
+else
+  fail "smart-router stats failed"
+fi
+
+if grep -R -E 'sk-or-v1-[A-Za-z0-9]{20,}|OPENROUTER_API_KEY="sk-or-v1-[A-Za-z0-9]{20,}' "$ROOT_DIR" --exclude-dir=.git >/dev/null 2>&1; then
+  fail "Potential secret-like API key pattern found in repo"
+fi
+pass "No obvious API keys found in tracked source"
+
+printf "All installer-flow checks passed.\n"
