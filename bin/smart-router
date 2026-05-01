@@ -302,10 +302,10 @@ def save_config(cfg: dict) -> None:
     write_json_file(CONFIG_FILE, cfg)
 
 
-def cmd_setup(args: argparse.Namespace) -> int:
+def run_key_setup(args: argparse.Namespace, action: str) -> int:
     ensure_dirs()
     current_key = read_saved_api_key()
-    eprint("Setting up OpenRouter API key...")
+    eprint(f"{action} OpenRouter API key...")
     if current_key:
         eprint("Existing saved key found. It will be replaced only after the new key is verified.")
     else:
@@ -345,6 +345,14 @@ def cmd_setup(args: argparse.Namespace) -> int:
     else:
         eprint("New key verified and saved successfully.")
     return 0
+
+
+def cmd_setup(args: argparse.Namespace) -> int:
+    return run_key_setup(args, "Setting up")
+
+
+def cmd_key_update(args: argparse.Namespace) -> int:
+    return run_key_setup(args, "Updating")
 
 
 def cmd_status(_args: argparse.Namespace) -> int:
@@ -584,6 +592,14 @@ def build_parser() -> argparse.ArgumentParser:
     setup_group.add_argument("--from-env", action="store_true", help="Read OPENROUTER_API_KEY from env")
     setup_group.add_argument("--visible", action="store_true", help="Show input while typing")
     setup.set_defaults(func=cmd_setup)
+
+    key = sub.add_parser("key", help="Manage OpenRouter API key", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    key_sub = key.add_subparsers(dest="key_cmd", required=True)
+    key_update = key_sub.add_parser("update", help="Update/replace saved OpenRouter API key", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    key_update_group = key_update.add_mutually_exclusive_group()
+    key_update_group.add_argument("--from-env", action="store_true", help="Read OPENROUTER_API_KEY from env")
+    key_update_group.add_argument("--visible", action="store_true", help="Show input while typing")
+    key_update.set_defaults(func=cmd_key_update)
 
     sub.add_parser("status", help="Show router status", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_status)
     sub.add_parser("last", help="Show last routed request", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_last)

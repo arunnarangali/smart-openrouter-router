@@ -122,6 +122,12 @@ smart-router setup
 
 `smart-router setup` verifies the new key before saving it and replaces any previously saved key only after verification succeeds.
 
+If you are replacing an existing key, use:
+
+```bash
+smart-router key update
+```
+
 Note: the default prompt is hidden (no characters will appear). Paste the key and press Enter.
 
 If you prefer visible input:
@@ -130,10 +136,18 @@ If you prefer visible input:
 smart-router setup --visible
 ```
 
+```bash
+smart-router key update --visible
+```
+
 If you want a non-interactive setup:
 
 ```bash
 OPENROUTER_API_KEY="sk-or-..." smart-router setup --from-env
+```
+
+```bash
+OPENROUTER_API_KEY="sk-or-..." smart-router key update --from-env
 ```
 
 Run Claude Code through the router:

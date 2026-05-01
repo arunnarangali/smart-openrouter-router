@@ -10,6 +10,13 @@
 - `smart-router setup --from-env` - Read OPENROUTER_API_KEY from env
 - `smart-router setup --visible` - Show input while typing
 
+## Key Management
+
+- `smart-router key` - Manage OpenRouter API key
+- `smart-router key update` - Update/replace saved OpenRouter API key
+- `smart-router key update --from-env` - Read OPENROUTER_API_KEY from env
+- `smart-router key update --visible` - Show input while typing
+
 ## Runtime Status
 
 - `smart-router status` - Show router status
