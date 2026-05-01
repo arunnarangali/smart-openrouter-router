@@ -8,6 +8,12 @@ All notable changes to this project are documented in this file.
 
 - Added streaming passthrough for OpenAI-compatible requests so OpenCode output appears incrementally when `stream=true`.
 
+## v0.4.4
+
+### Fixed
+
+- Fixed OpenCode launcher model mapping so plan/build resolve to valid `smart-router/*` model IDs.
+
 ## v0.4.1
 
 ### Added
