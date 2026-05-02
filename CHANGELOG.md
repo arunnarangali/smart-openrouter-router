@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.11
+
+### Added
+
+- Created pip package: `~/smart-router-packages/pip/`
+- Created npm package: `~/smart-router-packages/npm/`
+- Python pip package wraps existing smart_router.py, includes cli, scripts
+- npm package is a thin SDK/client that connects to local Python router
+
 ## v0.4.10
 
 ### Fixed
