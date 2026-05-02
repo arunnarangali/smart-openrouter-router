@@ -445,6 +445,12 @@ def choose_fast_model(ranked_models):
 def select_candidates(ranked_models, requested_model_raw):
     # ALWAYS use ranked free models with fallback
     # Ignore whatever model client sent - router decides
+    requested = requested_model_raw.lower()
+    # Detect smart-router/* as UI placeholders - ignore them
+    if requested.startswith("smart-router/"):
+        free_model_ids = [m.get("id") for m in ranked_models if m.get("id")]
+        return free_model_ids, "free-ranked"
+    # Default: always use free model ranking
     free_model_ids = [m.get("id") for m in ranked_models if m.get("id")]
     return free_model_ids, "free-ranked"
 

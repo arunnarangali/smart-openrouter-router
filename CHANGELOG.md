@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.10
+
+### Fixed
+
+- Added Smart Router Build/Plan to OpenCode dropdown with valid IDs.
+- Router detects smart-router/* as UI placeholders and ignores them.
+- Always uses free model ranking + fallback chain.
+
 ## v0.4.9
 
 ### Fixed
