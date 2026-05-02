@@ -151,13 +151,9 @@ def runtime_opencode_config(port: int, api_key: str) -> str:
                     "baseURL": f"http://127.0.0.1:{port}/v1",
                     "apiKey": api_key,
                 },
-                "models": {
-                    "build": {"id": "openai/gpt-4o-mini", "name": "Smart Router Build"},
-                    "plan": {"id": "openai/gpt-4o-mini", "name": "Smart Router Plan"},
-                },
             }
         },
-        "model": "smart-router/build",
+        # No model set - router decides based on scenario detection
     }
     return json.dumps(payload)
 

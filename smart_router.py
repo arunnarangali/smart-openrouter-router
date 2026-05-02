@@ -443,15 +443,10 @@ def choose_fast_model(ranked_models):
 
 
 def select_candidates(ranked_models, requested_model_raw):
-    requested_model = requested_model_raw.lower()
-    if requested_model == "smart-router/fast":
-        fast = choose_fast_model(ranked_models)
-        ordered = [m.get("id") for m in ranked_models if m.get("id")]
-        candidates = [fast] + [m for m in ordered if m != fast]
-        return candidates, "fast"
-    if requested_model == "smart-router/best" or requested_model.startswith("smart-router/") or not requested_model_raw:
-        return [m.get("id") for m in ranked_models if m.get("id")], "best"
-    return [requested_model_raw], "passthrough"
+    # ALWAYS use ranked free models with fallback
+    # Ignore whatever model client sent - router decides
+    free_model_ids = [m.get("id") for m in ranked_models if m.get("id")]
+    return free_model_ids, "free-ranked"
 
 
 def parse_error_details(body_bytes):
@@ -613,16 +608,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         router_config = load_router_config()
         cooldowns = load_cooldowns()
         stats = load_stats()
-        # smart-router/* models are UI hints; ignore them and use scenario detection
-        requested_model_raw = str(body.get("model") or "")
-        profile_key = scenario  # default: use detected scenario
-        if requested_model_raw.startswith("smart-router/"):
-            # User selected a generic UI model; use scenario detection
-            profile_key = scenario
-        elif str(body.get("model") or "").lower() == "smart-router/fast":
-            profile_key = "fast"
-        else:
-            profile_key = scenario
+        # ALWAYS use scenario detection from prompt
+        profile_key = scenario
         profile = (router_config.get("profiles") or {}).get(profile_key, {})
 
         ranked_models = rank_models(

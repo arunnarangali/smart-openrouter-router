@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.9
+
+### Fixed
+
+- Router now ALWAYS uses free model ranking + fallback chain.
+- Ignores client-sent model IDs; uses scenario detection from prompt.
+- Both opencode-free and claude-free benefit from proper free model selection.
+
 ## v0.4.8
 
 ### Fixed
