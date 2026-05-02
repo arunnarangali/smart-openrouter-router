@@ -613,7 +613,16 @@ class ProxyHandler(BaseHTTPRequestHandler):
         router_config = load_router_config()
         cooldowns = load_cooldowns()
         stats = load_stats()
-        profile_key = "fast" if str(body.get("model") or "").lower() == "smart-router/fast" else scenario
+        # smart-router/* models are UI hints; ignore them and use scenario detection
+        requested_model_raw = str(body.get("model") or "")
+        profile_key = scenario  # default: use detected scenario
+        if requested_model_raw.startswith("smart-router/"):
+            # User selected a generic UI model; use scenario detection
+            profile_key = scenario
+        elif str(body.get("model") or "").lower() == "smart-router/fast":
+            profile_key = "fast"
+        else:
+            profile_key = scenario
         profile = (router_config.get("profiles") or {}).get(profile_key, {})
 
         ranked_models = rank_models(

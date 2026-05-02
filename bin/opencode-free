@@ -152,11 +152,12 @@ def runtime_opencode_config(port: int, api_key: str) -> str:
                     "apiKey": api_key,
                 },
                 "models": {
-                    "default": {"name": "Smart Router"}
+                    "build": {"id": "openai/gpt-4o-mini", "name": "Smart Router Build"},
+                    "plan": {"id": "openai/gpt-4o-mini", "name": "Smart Router Plan"},
                 },
             }
         },
-        "model": "smart-router/default",
+        "model": "smart-router/build",
     }
     return json.dumps(payload)
 

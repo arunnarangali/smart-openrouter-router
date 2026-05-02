@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.8
+
+### Fixed
+
+- Updated OpenCode launcher config to show 2 models (Build/Plan) with valid IDs.
+- Router ignores smart-router UI models and uses scenario detection for all requests.
+
 ## v0.4.7
 
 ### Fixed
