@@ -1,6 +1,6 @@
 {
   "name": "smart-openrouter-router",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Free-model-only OpenRouter smart routing proxy and helper CLI",
   "type": "module",
   "license": "MIT",

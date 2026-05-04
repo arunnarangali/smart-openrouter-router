@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.1
+
+### Changed
+
+- Version bump release after v0.6.0 SDK rollout.
+- Clarified secure integration direction: keep `OPENROUTER_API_KEY` on backend/server only.
+
+### Notes
+
+- Existing `claude-free` and `opencode-free` behavior remains unchanged.
+
 ## v0.6.0
 
 ### Added
