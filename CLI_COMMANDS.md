@@ -66,8 +66,11 @@
 
 ## Stats
 
-- `smart-router stats` - Show model stats
+- `smart-router stats` - Show model/provider/scenario stats
 - `smart-router stats --human` - Show compact human-readable stats summary
+- `smart-router stats --scenario <name>` - Filter to one scenario key
+- `smart-router stats --model <id>` - Filter to one model id
+- `smart-router stats --provider <name>` - Filter to one provider name
 - `smart-router stats reset` - Reset model stats
 
 ## Health

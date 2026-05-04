@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.17
+
+### Added
+
+- Added provider-level runtime stats tracking under `stats.providers` (success/failure counts, avg latency, last status, last update).
+- Added stats filters for focused inspection:
+  - `smart-router stats --scenario <name>`
+  - `smart-router stats --model <id>`
+  - `smart-router stats --provider <name>`
+
+### Changed
+
+- Enhanced runtime ranking to factor in provider-level reliability and latency signals from historical stats.
+- Extended human stats summary to include tracked provider count.
+
+### Validation
+
+- Python compile checks passed.
+
 ## v0.4.16
 
 ### Added

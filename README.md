@@ -214,7 +214,10 @@ source ~/.zshrc
 - `smart-router config path|view|explain|reset|refresh` - config management
 - `smart-router config get/set/validate/diff-defaults` - advanced config UX helpers
 - `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
-- `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
+- `smart-router stats` / `smart-router stats reset` - inspect or clear model/provider/scenario stats
+- `smart-router stats --scenario <name>` - filter stats output to one scenario
+- `smart-router stats --model <id>` - filter stats output to one model
+- `smart-router stats --provider <name>` - filter stats output to one provider
 - `smart-router logs` - show recent router log lines
 - `smart-router doctor` - run environment/runtime health checks
 - `smart-router doctor --fix-suggestions` - include suggested remediation steps

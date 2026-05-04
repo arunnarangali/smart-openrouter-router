@@ -347,8 +347,25 @@ def _print_cooldowns_human(data: dict) -> None:
 def _print_stats_human(data: dict) -> None:
     models = data.get("models") or {}
     scenarios = data.get("scenarios") or {}
+    providers = data.get("providers") or {}
     print(f"models_tracked: {len(models)}")
     print(f"scenarios_tracked: {len(scenarios)}")
+    print(f"providers_tracked: {len(providers)}")
+
+
+def _filter_stats(data: dict, scenario: str = "", model: str = "", provider: str = "") -> dict:
+    out = {
+        "models": dict(data.get("models") or {}),
+        "scenarios": dict(data.get("scenarios") or {}),
+        "providers": dict(data.get("providers") or {}),
+    }
+    if scenario:
+        out["scenarios"] = {scenario: out["scenarios"][scenario]} if scenario in out["scenarios"] else {}
+    if model:
+        out["models"] = {model: out["models"][model]} if model in out["models"] else {}
+    if provider:
+        out["providers"] = {provider: out["providers"][provider]} if provider in out["providers"] else {}
+    return out
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -790,9 +807,11 @@ def cmd_cooldowns_clear(_args: argparse.Namespace) -> int:
 
 
 def cmd_stats(args: argparse.Namespace) -> int:
-    data = read_json_file(STATS_FILE, {"models": {}, "scenarios": {}})
+    data = read_json_file(STATS_FILE, {"models": {}, "scenarios": {}, "providers": {}})
     data.setdefault("models", {})
     data.setdefault("scenarios", {})
+    data.setdefault("providers", {})
+    data = _filter_stats(data, scenario=args.scenario, model=args.model, provider=args.provider)
     if args.human:
         _print_stats_human(data)
     else:
@@ -1024,9 +1043,12 @@ def build_parser() -> argparse.ArgumentParser:
     cool.set_defaults(func=cmd_cooldowns)
     cool_sub.add_parser("clear", help="Clear all cooldowns").set_defaults(func=cmd_cooldowns_clear)
 
-    stats = sub.add_parser("stats", help="Show model stats", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    stats = sub.add_parser("stats", help="Show model/provider/scenario stats", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     stats_sub = stats.add_subparsers(dest="stats_cmd")
     stats.add_argument("--human", action="store_true", help="Show compact human-readable output")
+    stats.add_argument("--scenario", default="", help="Filter to one scenario key")
+    stats.add_argument("--model", default="", help="Filter to one model id")
+    stats.add_argument("--provider", default="", help="Filter to one provider name")
     stats.set_defaults(func=cmd_stats)
     stats_sub.add_parser("reset", help="Reset model stats").set_defaults(func=cmd_stats_reset)
 

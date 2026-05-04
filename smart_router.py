@@ -144,11 +144,12 @@ def load_cooldowns():
 
 
 def load_stats():
-    data = load_json(STATS_FILE, {"models": {}, "scenarios": {}})
+    data = load_json(STATS_FILE, {"models": {}, "scenarios": {}, "providers": {}})
     if not isinstance(data, dict):
-        return {"models": {}, "scenarios": {}}
+        return {"models": {}, "scenarios": {}, "providers": {}}
     data.setdefault("models", {})
     data.setdefault("scenarios", {})
+    data.setdefault("providers", {})
     return data
 
 
@@ -322,6 +323,16 @@ def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=No
                 provider_until = float(provider_cd.get("until", 0) or 0)
                 if provider_until > time.time():
                     value -= 300
+                provider_stats = stats.get("providers", {}).get(last_provider, {})
+                ps = float(provider_stats.get("successes", 0) or 0)
+                pf = float(provider_stats.get("failures", 0) or 0)
+                pt = ps + pf
+                if pt > 0:
+                    p_success_rate = ps / pt
+                    value += (p_success_rate - 0.5) * 15
+                p_latency = float(provider_stats.get("avg_latency_ms", 0) or 0)
+                if p_latency > 0:
+                    value -= min(10, p_latency / 3000)
 
         if "2025" in combined:
             value += 10
@@ -452,6 +463,22 @@ def update_stats(model_id, success, latency_ms, status, provider="", scenario=""
     if provider:
         item["last_provider"] = provider
     item["last_updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    if provider:
+        providers = stats.setdefault("providers", {})
+        pitem = providers.setdefault(provider, {"successes": 0, "failures": 0, "avg_latency_ms": 0, "last_status": 0})
+        if success:
+            pitem["successes"] = int(pitem.get("successes", 0)) + 1
+        else:
+            pitem["failures"] = int(pitem.get("failures", 0)) + 1
+        p_current_avg = float(pitem.get("avg_latency_ms", 0) or 0)
+        p_total = int(pitem.get("successes", 0)) + int(pitem.get("failures", 0))
+        if p_total <= 1:
+            pitem["avg_latency_ms"] = int(latency_ms)
+        else:
+            pitem["avg_latency_ms"] = int(((p_current_avg * (p_total - 1)) + latency_ms) / p_total)
+        pitem["last_status"] = int(status or 0)
+        pitem["last_updated_at"] = datetime.now(timezone.utc).isoformat()
 
     if scenario:
         scenarios = stats.setdefault("scenarios", {})
