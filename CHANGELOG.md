@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.0
+
+### Added
+
+- Added Python SDK package `smart_openrouter_router` with:
+  - `SmartRouter` lifecycle API (`start`, `stop`, `status`, `last`)
+  - `route_chat(messages, ...)`
+  - `get_best_model(prompt, scenario=...)`
+  - convenience exports: `start_router`, `route_chat`, `get_best_model`
+- Added Node backend SDK wrapper in `index.js` with:
+  - `createSmartRouter({ apiKey, port, autoStart })`
+  - `start`, `stop`, `status`, `last`, `routeChat`, `getBestModel`
+- Added packaging metadata updates for SDK export paths.
+
+### Changed
+
+- Kept existing `claude-free` and `opencode-free` runtime behavior unchanged while adding SDK integrations as additive APIs.
+
+### Documentation
+
+- Added SDK integration guidance for Python and Node backends.
+- Added React safety guidance (use backend proxy; never expose API key in browser code).
+
 ## v0.5.0
 
 ### Added

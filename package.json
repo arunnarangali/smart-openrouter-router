@@ -1,7 +1,8 @@
 {
   "name": "smart-openrouter-router",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Free-model-only OpenRouter smart routing proxy and helper CLI",
+  "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,8 +17,15 @@
     "claude-free": "bin/claude-free",
     "opencode-free": "bin/opencode-free"
   },
+  "exports": {
+    ".": "./index.js"
+  },
   "files": [
-    "bin/",
+    "bin/smart-router",
+    "bin/claude-free",
+    "bin/opencode-free",
+    "index.js",
+    "smart_openrouter_router/",
     "smart_router.py",
     "smart_router_common.py",
     "install.sh",

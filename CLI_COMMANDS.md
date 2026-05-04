@@ -98,3 +98,9 @@ Notes:
 ## Packaging (v0.5.0+)
 
 - Releases include Python wheel/sdist and npm `.tgz` artifacts in addition to the source archive.
+
+## SDK (v0.6.0+)
+
+- Python: `from smart_openrouter_router import SmartRouter`
+- Node backend: `import { createSmartRouter } from "smart-openrouter-router"`
+- Node wrapper requires `python3` available (it reuses the same Python router process).

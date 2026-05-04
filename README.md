@@ -127,6 +127,45 @@ Each GitHub release now includes:
 
 You can install from release artifacts directly with your standard Python/npm workflows if preferred.
 
+## SDK usage (v0.6.0+)
+
+The core router logic can now be reused in existing Python and Node backends.
+
+Python:
+
+```python
+from smart_openrouter_router import SmartRouter
+
+with SmartRouter() as router:
+    out = router.route_chat([
+        {"role": "user", "content": "Write a FastAPI health endpoint"}
+    ])
+    print(out)
+```
+
+Node backend:
+
+```js
+import { createSmartRouter } from "smart-openrouter-router"
+
+const router = createSmartRouter({ apiKey: process.env.OPENROUTER_API_KEY })
+await router.start()
+const out = await router.routeChat({
+  messages: [{ role: "user", content: "Write a React hook" }]
+})
+await router.stop()
+```
+
+Environment setup:
+
+- set `OPENROUTER_API_KEY`
+- for Node SDK wrapper, ensure `python3` is installed (it starts the same Python router process)
+
+Security note for React:
+
+- do not put `OPENROUTER_API_KEY` in browser/frontend code
+- call Smart Router from your backend (Express/FastAPI/Next API route)
+
 ## Full Documentation
 
 For complete step-by-step setup, prerequisites, troubleshooting, and operations, read:

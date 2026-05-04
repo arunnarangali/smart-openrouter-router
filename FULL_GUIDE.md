@@ -110,6 +110,53 @@ Tagged GitHub releases also publish package artifacts:
 
 This allows pip/npm-style installs from release assets in addition to the curl installer.
 
+---
+
+## SDK Integration (v0.6.0+)
+
+You can now integrate Smart Router into existing projects without re-implementing
+scenario detection, ranking, cooldowns, fallback, and stats.
+
+### Python projects
+
+```python
+from smart_openrouter_router import SmartRouter
+
+with SmartRouter() as router:
+    result = router.route_chat([
+        {"role": "user", "content": "Create a Django serializer"}
+    ])
+    print(result)
+```
+
+### Node/Express backends
+
+```js
+import express from "express"
+import { createSmartRouter } from "smart-openrouter-router"
+
+const app = express()
+app.use(express.json())
+
+const router = createSmartRouter({ apiKey: process.env.OPENROUTER_API_KEY })
+await router.start()
+
+app.post("/api/chat", async (req, res) => {
+  try {
+    const out = await router.routeChat({ messages: req.body.messages || [] })
+    res.json(out)
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+```
+
+### React safety
+
+- Never put `OPENROUTER_API_KEY` directly in frontend/browser code.
+- React app -> your backend API -> Smart Router -> OpenRouter.
+- Keep keys on server only.
+
 Latest (convenience, less reproducible):
 
 ```bash
