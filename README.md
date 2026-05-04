@@ -261,12 +261,12 @@ This can happen on specific OpenRouter providers even for `:free` models.
 The router now retries next ranked free models automatically. Check fallback chain with:
 
 ```bash
-router-last
+smart-router last
 ```
 
 ### Claude Code says model may not exist
 
-If Claude Code shows `smart-router/best may not exist`, check `router-last`.
+If Claude Code shows `smart-router/best may not exist`, check `smart-router last`.
 
 This usually means OpenRouter returned a provider/tool-endpoint error, not that the local virtual model is missing.
 

@@ -117,6 +117,21 @@ def write_active(port: int, pid: int) -> None:
     ACTIVE_FILE.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def clear_active_if_owned(pid: int) -> None:
+    if not ACTIVE_FILE.exists():
+        return
+    try:
+        payload = json.loads(ACTIVE_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    if int(payload.get("pid", 0) or 0) != int(pid):
+        return
+    try:
+        ACTIVE_FILE.unlink()
+    except OSError:
+        pass
+
+
 def stop_router(proc: subprocess.Popen) -> None:
     if proc.poll() is not None:
         return
@@ -206,11 +221,7 @@ def main() -> int:
         return result.returncode
     finally:
         stop_router(proc)
-        if ACTIVE_FILE.exists():
-            try:
-                ACTIVE_FILE.unlink()
-            except OSError:
-                pass
+        clear_active_if_owned(proc.pid)
 
 
 if __name__ == "__main__":

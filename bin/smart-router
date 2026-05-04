@@ -703,6 +703,20 @@ def cmd_stats_reset(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_logs(args: argparse.Namespace) -> int:
+    if args.path:
+        print(str(LOG_FILE))
+        return 0
+    if not LOG_FILE.exists():
+        eprint("Router log not found.")
+        return 1
+    data = LOG_FILE.read_text(encoding="utf-8", errors="ignore").splitlines()
+    lines = max(1, int(args.lines))
+    for line in data[-lines:]:
+        print(line)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="smart-router",
@@ -765,6 +779,11 @@ def build_parser() -> argparse.ArgumentParser:
     stats_sub = stats.add_subparsers(dest="stats_cmd")
     stats.set_defaults(func=cmd_stats)
     stats_sub.add_parser("reset", help="Reset model stats").set_defaults(func=cmd_stats_reset)
+
+    logs = sub.add_parser("logs", help="Show router logs", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    logs.add_argument("--lines", type=int, default=80, help="Show last N lines")
+    logs.add_argument("--path", action="store_true", help="Print log file path")
+    logs.set_defaults(func=cmd_logs)
 
     return parser
 

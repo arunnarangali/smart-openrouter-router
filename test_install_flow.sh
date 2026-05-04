@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMP_DIR="$(mktemp -d)"
 PREFIX="$TMP_DIR/prefix"
+XDG_CONFIG_HOME="$TMP_DIR/config"
+XDG_CACHE_HOME="$TMP_DIR/cache"
+export XDG_CONFIG_HOME
+export XDG_CACHE_HOME
 
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -27,7 +31,7 @@ assert_exec() {
 
 printf "Running installer-flow checks in temp prefix...\n"
 
-SMART_ROUTER_PREFIX="$PREFIX" SMART_ROUTER_VERSION="test" bash "$ROOT_DIR/install.sh"
+SMART_ROUTER_PREFIX="$PREFIX" SMART_ROUTER_VERSION="test" XDG_CONFIG_HOME="$XDG_CONFIG_HOME" XDG_CACHE_HOME="$XDG_CACHE_HOME" bash "$ROOT_DIR/install.sh"
 
 BIN_DIR="$PREFIX/bin"
 SHARE_DIR="$PREFIX/share/smart-openrouter-router"
@@ -104,6 +108,14 @@ else
   fail "smart-router config path failed"
 fi
 
+CONFIG_PATH="$($BIN_DIR/smart-router config path)"
+EXPECTED_CONFIG_PATH="$XDG_CONFIG_HOME/smart-openrouter-router/config.json"
+if [ "$CONFIG_PATH" = "$EXPECTED_CONFIG_PATH" ]; then
+  pass "config path is isolated to temp XDG_CONFIG_HOME"
+else
+  fail "config path not isolated: got '$CONFIG_PATH' expected '$EXPECTED_CONFIG_PATH'"
+fi
+
 if "$BIN_DIR/smart-router" config explain >/dev/null; then
   pass "smart-router config explain works"
 else
@@ -132,6 +144,18 @@ if "$BIN_DIR/smart-router" stats >/dev/null; then
   pass "smart-router stats works"
 else
   fail "smart-router stats failed"
+fi
+
+if "$BIN_DIR/smart-router" logs --help >/dev/null; then
+  pass "smart-router logs help works"
+else
+  fail "smart-router logs help failed"
+fi
+
+if "$BIN_DIR/smart-router" logs --path >/dev/null; then
+  pass "smart-router logs path works"
+else
+  fail "smart-router logs path failed"
 fi
 
 if python3 "$ROOT_DIR/test_scenario_detection.py" >/dev/null; then

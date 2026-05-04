@@ -663,12 +663,24 @@ class ProxyHandler(BaseHTTPRequestHandler):
         return os.environ.get("OPENROUTER_API_KEY", "")
 
     def _read_json_body(self):
-        length = int(self.headers.get("Content-Length", 0))
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            self._error(400, "Invalid Content-Length")
+            return None
+        if length < 0:
+            self._error(400, "Invalid Content-Length")
+            return None
         raw = self.rfile.read(length) if length else b"{}"
         try:
-            return json.loads(raw or b"{}")
+            payload = json.loads(raw or b"{}")
         except json.JSONDecodeError:
-            return {}
+            self._error(400, "Request body must be valid JSON")
+            return None
+        if not isinstance(payload, dict):
+            self._error(400, "Request body must be a JSON object")
+            return None
+        return payload
 
     def do_POST(self):
         api_key = self._api_key()
@@ -677,9 +689,15 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return
 
         body = self._read_json_body()
+        if body is None:
+            return
         accept_header = (self.headers.get("Accept") or "").lower()
         stream_requested = bool(body.get("stream")) or "text/event-stream" in accept_header
-        scenario_analysis = analyze_scenario(body.get("messages", []))
+        messages = body.get("messages", [])
+        if not isinstance(messages, list):
+            self._error(400, "messages must be a list")
+            return
+        scenario_analysis = analyze_scenario(messages)
         scenario = scenario_analysis["detected_scenario"]
         free_models = model_cache.get_free_models(api_key)
 

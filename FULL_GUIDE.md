@@ -321,7 +321,7 @@ The proxy chooses and retries automatically.
 After any Claude Code request:
 
 ```bash
-router-last
+smart-router last
 ```
 
 This shows fields like:
@@ -340,13 +340,13 @@ This shows fields like:
 You can also view status summary:
 
 ```bash
-router-status
+smart-router status
 ```
 
 And logs:
 
 ```bash
-router-logs
+smart-router logs
 ```
 
 ---
@@ -411,7 +411,7 @@ This makes Claude Code usage much more reliable.
 
 ## 13) Common issues and fixes
 
-### A) `router-last: command not found`
+### A) `smart-router last: command not found`
 
 Run:
 
@@ -438,8 +438,8 @@ This may come from a specific provider backend. Router should fallback automatic
 Check details:
 
 ```bash
-router-last
-router-logs
+smart-router last
+smart-router logs
 ```
 
 ### G) Claude Code says `smart-router/best` may not exist
@@ -449,7 +449,7 @@ This message is often a downstream provider/tool-endpoint failure, not a missing
 Run:
 
 ```bash
-router-last
+smart-router last
 ```
 
 Check these fields:
@@ -472,7 +472,7 @@ Stop current process or change port in:
 
 - Verify `OPENROUTER_API_KEY` in `.zshrc`
 - Run `source ~/.zshrc`
-- Retry `router-status`
+- Retry `smart-router status`
 
 ### F) Claude Code still using old settings
 

@@ -45,11 +45,16 @@ def ensure_dirs() -> None:
 
 
 def read_api_key() -> str:
+    saved_key = KEY_FILE.read_text(encoding="utf-8").strip() if KEY_FILE.exists() else ""
     env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+
+    if saved_key and env_key and saved_key != env_key:
+        eprint("Saved key and OPENROUTER_API_KEY differ. Using saved key from config.")
+
+    if saved_key:
+        return saved_key
     if env_key:
         return env_key
-    if KEY_FILE.exists():
-        return KEY_FILE.read_text(encoding="utf-8").strip()
     return ""
 
 
@@ -110,6 +115,21 @@ def write_active(port: int, pid: int) -> None:
         "started_at": time.time(),
     }
     ACTIVE_FILE.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def clear_active_if_owned(pid: int) -> None:
+    if not ACTIVE_FILE.exists():
+        return
+    try:
+        payload = json.loads(ACTIVE_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    if int(payload.get("pid", 0) or 0) != int(pid):
+        return
+    try:
+        ACTIVE_FILE.unlink()
+    except OSError:
+        pass
 
 
 def stop_router(proc: subprocess.Popen) -> None:
@@ -182,11 +202,7 @@ def main() -> int:
         return result.returncode
     finally:
         stop_router(proc)
-        if ACTIVE_FILE.exists():
-            try:
-                ACTIVE_FILE.unlink()
-            except OSError:
-                pass
+        clear_active_if_owned(proc.pid)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,8 @@
 
 - `smart-router status` - Show router status
 - `smart-router last` - Show last routed request
+- `smart-router logs` - Show router logs
+- `smart-router logs --path` - Print router log file path
 
 ## Models
 
