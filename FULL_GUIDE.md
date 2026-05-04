@@ -96,10 +96,19 @@ Run the installer (adds commands to `~/.local/bin`):
 Pinned (recommended):
 
 ```bash
-VER=v0.3.3
+VER=<release-tag>
 curl -fsSL "https://raw.githubusercontent.com/arunnarangali/smart-openrouter-router/$VER/smart-router-install.sh" \
   | SMART_ROUTER_VERSION="$VER" bash
 ```
+
+### Package artifacts (v0.5.0+)
+
+Tagged GitHub releases also publish package artifacts:
+
+- Python wheel and sdist
+- npm tarball (`.tgz`)
+
+This allows pip/npm-style installs from release assets in addition to the curl installer.
 
 Latest (convenience, less reproducible):
 

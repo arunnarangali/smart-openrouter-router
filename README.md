@@ -117,6 +117,16 @@ smart-router setup
 claude-free
 ```
 
+## Package artifacts (v0.5.0+)
+
+Each GitHub release now includes:
+
+- source archive: `smart-openrouter-router-<tag>.tar.gz`
+- Python distributions: wheel + sdist
+- npm tarball: `smart-openrouter-router-*.tgz`
+
+You can install from release artifacts directly with your standard Python/npm workflows if preferred.
+
 ## Full Documentation
 
 For complete step-by-step setup, prerequisites, troubleshooting, and operations, read:

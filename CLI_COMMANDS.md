@@ -94,3 +94,7 @@ Notes:
 
 - If a client sends `stream=true` or `Accept: text/event-stream`, the router forwards chunks as they arrive.
 - Retries only occur before streaming starts; the router cannot switch models mid-stream.
+
+## Packaging (v0.5.0+)
+
+- Releases include Python wheel/sdist and npm `.tgz` artifacts in addition to the source archive.

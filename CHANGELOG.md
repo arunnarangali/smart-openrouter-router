@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.5.0
+
+### Added
+
+- Added Python packaging metadata via `pyproject.toml` for wheel/sdist builds.
+- Added npm packaging metadata via `package.json` with CLI bin mappings.
+- Extended release workflow to build and attach:
+  - source archive (`smart-openrouter-router-<tag>.tar.gz`)
+  - Python wheel + sdist
+  - npm tarball (`smart-openrouter-router-*.tgz`)
+- Extended release checksums to include all attached package artifacts.
+
+### Documentation
+
+- Documented package/release artifact expectations for pip/npm users.
+
+### Validation
+
+- Python compile checks passed.
+- `python3 test_scenario_detection.py` passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.4.17
 
 ### Added
