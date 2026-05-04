@@ -11,6 +11,7 @@ CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/smart-openrouter-router"
 mkdir -p "$BIN_DIR" "$SHARE_DIR" "$CONFIG_DIR" "$CACHE_DIR"
 
 cp "$ROOT_DIR/smart_router.py" "$SHARE_DIR/smart_router.py"
+cp "$ROOT_DIR/smart_router_common.py" "$SHARE_DIR/smart_router_common.py"
 cp "$ROOT_DIR/bin/claude-free" "$BIN_DIR/claude-free"
 cp "$ROOT_DIR/bin/opencode-free" "$BIN_DIR/opencode-free"
 cp "$ROOT_DIR/bin/smart-router" "$BIN_DIR/smart-router"

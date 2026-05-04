@@ -169,6 +169,7 @@ For Claude Code tool/agent requests, it also:
 ## Files
 
 - `smart_router.py` - router server
+- `smart_router_common.py` - shared scenarios/config/filter helpers used by router and CLI
 - `bin/claude-free` - starts router and runs Claude Code
 - `bin/opencode-free` - starts router and runs OpenCode
 - `bin/smart-router` - setup/status/last/reset CLI

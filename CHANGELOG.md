@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.14
+
+### Changed
+
+- Refactored shared scenario/config/filter logic into `smart_router_common.py` to keep runtime router and CLI behavior aligned.
+- Updated `smart_router.py` and `bin/smart-router` to use shared analyzer/profile/filter/atomic-write helpers.
+- Updated installer to include `smart_router_common.py` in the installed share directory.
+
+### Validation
+
+- Python compile checks passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.4.13
 
 ### Added

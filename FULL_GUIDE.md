@@ -70,6 +70,7 @@ cd smart-openrouter-router
 Repository files:
 
 - `smart_router.py` - main proxy server
+- `smart_router_common.py` - shared scenarios/config/filter helpers
 - `bin/claude-free` - starts router and runs Claude Code
 - `bin/opencode-free` - starts router and runs OpenCode
 - `bin/smart-router` - setup/status/last/reset CLI

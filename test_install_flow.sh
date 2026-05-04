@@ -44,6 +44,7 @@ assert_exec "$BIN_DIR/smart-router"
 assert_exec "$BIN_DIR/opencode-free"
 
 assert_file "$SHARE_DIR/smart_router.py"
+assert_file "$SHARE_DIR/smart_router_common.py"
 assert_file "$SHARE_DIR/VERSION"
 
 python3 -m py_compile "$ROOT_DIR/smart_router.py"
