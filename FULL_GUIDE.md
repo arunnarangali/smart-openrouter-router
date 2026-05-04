@@ -386,10 +386,12 @@ This makes Claude Code usage much more reliable.
 - `smart-router scenario --explain "prompt text"` - include matched keywords and weighted contributions
 - `smart-router scenario --compare prompts.txt` - analyze one prompt per line
 - `smart-router config path|view|explain|reset|refresh` - config file management
+- `smart-router config get/set/validate/diff-defaults` - advanced config UX helpers
 - `smart-router cooldowns` / `smart-router cooldowns clear` - cooldown visibility/control
 - `smart-router stats` / `smart-router stats reset` - performance stats visibility/control
 - `smart-router logs` - show recent router log lines
 - `smart-router doctor` - run environment/runtime health checks
+- `smart-router doctor --fix-suggestions` - include suggested remediation steps
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `smart-router uninstall` - remove installed commands and local state

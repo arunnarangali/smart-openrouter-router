@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.16
+
+### Added
+
+- Added config UX commands:
+  - `smart-router config get <dotted.key>`
+  - `smart-router config set <dotted.key> <value>`
+  - `smart-router config validate`
+  - `smart-router config diff-defaults`
+- Enhanced `smart-router doctor` with:
+  - installed file checks under prefix
+  - installed-vs-latest version drift check
+  - config/stats/cooldowns JSON validity checks
+  - log-directory writeability check
+  - active PID `/status` reachability check
+  - `--fix-suggestions` output mode
+
+### Validation
+
+- Python compile checks passed.
+- `python3 test_scenario_detection.py` passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.4.15
 
 ### Added

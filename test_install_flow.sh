@@ -135,6 +135,30 @@ else
   fail "smart-router config explain failed"
 fi
 
+if "$BIN_DIR/smart-router" config validate >/dev/null; then
+  pass "smart-router config validate works"
+else
+  fail "smart-router config validate failed"
+fi
+
+if "$BIN_DIR/smart-router" config get policy.mode >/dev/null; then
+  pass "smart-router config get works"
+else
+  fail "smart-router config get failed"
+fi
+
+if "$BIN_DIR/smart-router" config set profiles.coding_general.min_context 20000 >/dev/null; then
+  pass "smart-router config set works"
+else
+  fail "smart-router config set failed"
+fi
+
+if "$BIN_DIR/smart-router" config diff-defaults >/dev/null; then
+  pass "smart-router config diff-defaults works"
+else
+  fail "smart-router config diff-defaults failed"
+fi
+
 if "$BIN_DIR/smart-router" config reset >/dev/null; then
   pass "smart-router config reset works"
 else
@@ -169,6 +193,12 @@ if "$BIN_DIR/smart-router" doctor --json >/dev/null 2>&1; then
   pass "smart-router doctor --json works"
 else
   pass "smart-router doctor --json reports issues cleanly when setup is incomplete"
+fi
+
+if "$BIN_DIR/smart-router" doctor --json --fix-suggestions >/dev/null 2>&1; then
+  pass "smart-router doctor --fix-suggestions works"
+else
+  pass "smart-router doctor --fix-suggestions reports issues cleanly when setup is incomplete"
 fi
 
 if "$BIN_DIR/smart-router" logs --help >/dev/null; then

@@ -528,6 +528,122 @@ def cmd_config_explain(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _parse_scalar(value: str):
+    text = str(value).strip()
+    if text.lower() == "true":
+        return True
+    if text.lower() == "false":
+        return False
+    if text.lower() == "null":
+        return None
+    try:
+        if text.startswith("0") and len(text) > 1 and text.isdigit():
+            return text
+        return int(text)
+    except ValueError:
+        pass
+    try:
+        return float(text)
+    except ValueError:
+        return text
+
+
+def _walk_get(obj: dict, dotted: str):
+    current = obj
+    for key in dotted.split("."):
+        if not isinstance(current, dict) or key not in current:
+            raise KeyError(dotted)
+        current = current[key]
+    return current
+
+
+def _walk_set(obj: dict, dotted: str, value) -> None:
+    keys = dotted.split(".")
+    current = obj
+    for key in keys[:-1]:
+        if key not in current or not isinstance(current[key], dict):
+            current[key] = {}
+        current = current[key]
+    current[keys[-1]] = value
+
+
+def _diff_dict(defaults: dict, current: dict, prefix: str = "") -> list[str]:
+    lines: list[str] = []
+    keys = sorted(set(defaults.keys()) | set(current.keys()))
+    for key in keys:
+        path = f"{prefix}.{key}" if prefix else key
+        dv = defaults.get(key, "__missing__")
+        cv = current.get(key, "__missing__")
+        if isinstance(dv, dict) and isinstance(cv, dict):
+            lines.extend(_diff_dict(dv, cv, path))
+            continue
+        if dv != cv:
+            lines.append(f"{path}: {dv!r} -> {cv!r}")
+    return lines
+
+
+def cmd_config_get(args: argparse.Namespace) -> int:
+    cfg = load_config()
+    try:
+        value = _walk_get(cfg, args.key)
+    except KeyError:
+        eprint(f"Config key not found: {args.key}")
+        return 1
+    print(json.dumps(value, indent=2) if isinstance(value, (dict, list)) else value)
+    return 0
+
+
+def cmd_config_set(args: argparse.Namespace) -> int:
+    cfg = load_config()
+    value = _parse_scalar(args.value)
+    _walk_set(cfg, args.key, value)
+    cfg["updated_at"] = datetime.now(timezone.utc).isoformat()
+    cfg["source"] = "manual-set"
+    save_config(cfg)
+    print(f"Updated {args.key} in {CONFIG_FILE}")
+    return 0
+
+
+def cmd_config_validate(_args: argparse.Namespace) -> int:
+    cfg = read_json_file(CONFIG_FILE, default_config()) if CONFIG_FILE.exists() else default_config()
+    errors: list[str] = []
+    if not isinstance(cfg, dict):
+        errors.append("config root must be an object")
+    else:
+        policy = cfg.get("policy")
+        if not isinstance(policy, dict):
+            errors.append("policy must be an object")
+        else:
+            if policy.get("mode") != "free-only":
+                errors.append("policy.mode must be 'free-only'")
+        profiles = cfg.get("profiles")
+        if not isinstance(profiles, dict):
+            errors.append("profiles must be an object")
+        else:
+            for scenario in SCENARIOS:
+                if scenario not in profiles:
+                    errors.append(f"missing profile: {scenario}")
+
+    if errors:
+        for err in errors:
+            eprint(f"INVALID: {err}")
+        return 1
+    print("Config is valid.")
+    return 0
+
+
+def cmd_config_diff_defaults(_args: argparse.Namespace) -> int:
+    defaults = default_config()
+    current = load_config()
+    diffs = _diff_dict(defaults, current)
+    if not diffs:
+        print("No differences from defaults.")
+        return 0
+    for line in diffs:
+        print(line)
+    return 0
+
+
 def cmd_models(args: argparse.Namespace) -> int:
     key = read_api_key()
     if not key:
@@ -694,6 +810,26 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     add("claude", "pass" if shutil.which("claude") else "warn", "claude in PATH")
     add("opencode", "pass" if shutil.which("opencode") else "warn", "opencode in PATH")
 
+    prefix = install_prefix()
+    share = prefix / "share" / "smart-openrouter-router"
+    expected_paths = [
+        prefix / "bin" / "smart-router",
+        prefix / "bin" / "claude-free",
+        prefix / "bin" / "opencode-free",
+        share / "smart_router.py",
+        share / "smart_router_common.py",
+        share / "VERSION",
+    ]
+    for path in expected_paths:
+        add(f"installed:{path.name}", "pass" if path.exists() else "warn", str(path))
+
+    current = installed_version()
+    try:
+        latest = latest_tag()
+        add("version", "pass" if current == latest else "warn", f"installed={current} latest={latest}")
+    except Exception as exc:
+        add("version", "warn", f"latest lookup failed: {exc}")
+
     saved_key = read_saved_api_key()
     env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if saved_key:
@@ -720,6 +856,13 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         try:
             os.kill(int(active.get("pid")), 0)
             add("active-router-pid", "pass", f"pid={active.get('pid')}")
+            port = active.get("port")
+            if port:
+                try:
+                    request_json(int(port), "/status")
+                    add("active-router-status", "pass", f"/status reachable on {port}")
+                except Exception as exc:
+                    add("active-router-status", "warn", f"/status not reachable: {exc}")
         except OSError:
             add("active-router-pid", "warn", "active pid not running")
     else:
@@ -729,13 +872,59 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if key_for_api:
         add("openrouter-api", "pass" if verify_key(key_for_api) else "fail", "models API verification")
 
+    cfg_ok = True
+    for name, path in [("config-json", CONFIG_FILE), ("stats-json", STATS_FILE), ("cooldowns-json", COOLDOWNS_FILE)]:
+        if not path.exists():
+            add(name, "warn", f"missing {path}")
+            continue
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+            add(name, "pass", str(path))
+        except Exception as exc:
+            cfg_ok = False
+            add(name, "fail", f"invalid JSON: {exc}")
+
+    log_parent = LOG_FILE.parent
+    try:
+        log_parent.mkdir(parents=True, exist_ok=True)
+        test_file = log_parent / ".doctor-write-test"
+        test_file.write_text("ok", encoding="utf-8")
+        test_file.unlink()
+        add("log-dir-writable", "pass", str(log_parent))
+    except Exception as exc:
+        add("log-dir-writable", "fail", f"{log_parent}: {exc}")
+
     ok = all(item["status"] != "fail" for item in checks)
     if args.json:
-        print(json.dumps({"ok": ok, "checks": checks}, indent=2))
+        payload = {"ok": ok, "checks": checks}
+        if args.fix_suggestions:
+            suggestions: list[str] = []
+            if not saved_key and not env_key:
+                suggestions.append("Run: smart-router setup")
+            if os.environ.get("ANTHROPIC_AUTH_TOKEN"):
+                suggestions.append("Unset ANTHROPIC_AUTH_TOKEN in shell/profile")
+            if not shutil.which("claude"):
+                suggestions.append("Install Claude Code CLI")
+            if not shutil.which("opencode"):
+                suggestions.append("Install OpenCode CLI (optional)")
+            if not cfg_ok:
+                suggestions.append(f"Run: rm -f {STATS_FILE} {COOLDOWNS_FILE} then retry")
+            payload["fix_suggestions"] = suggestions
+        print(json.dumps(payload, indent=2))
     else:
         print("Smart Router Doctor")
         for item in checks:
             print(f"{item['status'].upper():5s} {item['name']} {('- ' + item['message']) if item['message'] else ''}")
+        if args.fix_suggestions:
+            print("\nSuggested fixes:")
+            if not saved_key and not env_key:
+                print("- smart-router setup")
+            if os.environ.get("ANTHROPIC_AUTH_TOKEN"):
+                print("- unset ANTHROPIC_AUTH_TOKEN")
+            if not shutil.which("claude"):
+                print("- Install Claude Code CLI")
+            if not shutil.which("opencode"):
+                print("- Install OpenCode CLI (optional)")
     return 0 if ok else 1
 
 
@@ -817,6 +1006,15 @@ def build_parser() -> argparse.ArgumentParser:
     cfg_sub.add_parser("path", help="Show config path").set_defaults(func=cmd_config_path)
     cfg_sub.add_parser("view", help="View current config").set_defaults(func=cmd_config_view)
     cfg_sub.add_parser("explain", help="Explain config behavior").set_defaults(func=cmd_config_explain)
+    cfg_get = cfg_sub.add_parser("get", help="Get config value by dotted path")
+    cfg_get.add_argument("key", help="Dotted key path (example: profiles.coding_general.min_context)")
+    cfg_get.set_defaults(func=cmd_config_get)
+    cfg_set = cfg_sub.add_parser("set", help="Set config value by dotted path")
+    cfg_set.add_argument("key", help="Dotted key path")
+    cfg_set.add_argument("value", help="Value (supports true/false/null/int/float/string)")
+    cfg_set.set_defaults(func=cmd_config_set)
+    cfg_sub.add_parser("validate", help="Validate config structure and policy").set_defaults(func=cmd_config_validate)
+    cfg_sub.add_parser("diff-defaults", help="Show differences from default config").set_defaults(func=cmd_config_diff_defaults)
     cfg_sub.add_parser("reset", help="Reset config to defaults").set_defaults(func=cmd_config_reset)
     cfg_sub.add_parser("refresh", help="Refresh best free models in config").set_defaults(func=cmd_config_refresh)
 
@@ -839,6 +1037,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = sub.add_parser("doctor", help="Run environment and runtime health checks", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     doctor.add_argument("--json", action="store_true", help="Output JSON")
+    doctor.add_argument("--fix-suggestions", action="store_true", help="Include suggested remediation steps")
     doctor.set_defaults(func=cmd_doctor)
 
     return parser

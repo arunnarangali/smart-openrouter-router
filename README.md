@@ -212,10 +212,12 @@ source ~/.zshrc
 - `smart-router scenario --explain "prompt text"` - include matched keywords and weights
 - `smart-router scenario --compare prompts.txt` - analyze one prompt per line
 - `smart-router config path|view|explain|reset|refresh` - config management
+- `smart-router config get/set/validate/diff-defaults` - advanced config UX helpers
 - `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
 - `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
 - `smart-router logs` - show recent router log lines
 - `smart-router doctor` - run environment/runtime health checks
+- `smart-router doctor --fix-suggestions` - include suggested remediation steps
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `smart-router uninstall` - fully remove installed commands and local state

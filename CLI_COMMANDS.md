@@ -52,6 +52,10 @@
 - `smart-router config path` - Show config path
 - `smart-router config view` - View current config
 - `smart-router config explain` - Explain config behavior
+- `smart-router config get <dotted.key>` - Read config value by dotted path
+- `smart-router config set <dotted.key> <value>` - Set config value by dotted path
+- `smart-router config validate` - Validate config structure and free-only policy
+- `smart-router config diff-defaults` - Show differences from default config
 - `smart-router config reset` - Reset config to defaults
 - `smart-router config refresh` - Refresh best free models in config
 
@@ -70,6 +74,7 @@
 
 - `smart-router doctor` - Run environment/runtime health checks
 - `smart-router doctor --json` - Output doctor checks as JSON
+- `smart-router doctor --fix-suggestions` - Include suggested remediation steps
 
 ## Shared Notes
 
