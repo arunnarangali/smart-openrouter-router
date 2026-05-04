@@ -210,6 +210,8 @@ source ~/.zshrc
 - `smart-router config path|view|explain|reset|refresh` - config management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
 - `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
+- `smart-router logs` - show recent router log lines
+- `smart-router doctor` - run environment/runtime health checks
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `smart-router uninstall` - fully remove installed commands and local state
@@ -282,6 +284,8 @@ If you see both `ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_API_KEY` set, ensure this 
 ```bash
 unset ANTHROPIC_AUTH_TOKEN
 ```
+
+You can run `smart-router doctor` to detect this and other common environment issues.
 
 ### Port already in use
 

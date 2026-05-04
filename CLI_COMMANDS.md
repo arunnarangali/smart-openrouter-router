@@ -15,7 +15,9 @@
 ## Runtime Status
 
 - `smart-router status` - Show router status
+- `smart-router status --human` - Show compact human-readable status
 - `smart-router last` - Show last routed request
+- `smart-router last --human` - Show compact human-readable last route
 - `smart-router logs` - Show router logs
 - `smart-router logs --path` - Print router log file path
 
@@ -58,7 +60,13 @@
 ## Stats
 
 - `smart-router stats` - Show model stats
+- `smart-router stats --human` - Show compact human-readable stats summary
 - `smart-router stats reset` - Reset model stats
+
+## Health
+
+- `smart-router doctor` - Run environment/runtime health checks
+- `smart-router doctor --json` - Output doctor checks as JSON
 
 ## Shared Notes
 

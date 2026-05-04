@@ -212,7 +212,9 @@ def load_json(path: Path, fallback: dict):
 
 def save_json(path: Path, payload: dict):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temp_path = path.with_name(f"{path.name}.tmp")
+    temp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temp_path.replace(path)
 
 
 def load_router_config():

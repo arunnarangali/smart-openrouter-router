@@ -152,7 +152,9 @@ def read_json_file(path: Path, fallback: dict) -> dict:
 
 def write_json_file(path: Path, payload: dict) -> None:
     ensure_dirs()
-    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temp_path = path.with_name(f"{path.name}.tmp")
+    temp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temp_path.replace(path)
 
 
 def read_api_key() -> str:
@@ -422,28 +424,73 @@ def cmd_setup(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_status(_args: argparse.Namespace) -> int:
+def _print_status_human(data: dict) -> None:
+    print(f"status: {data.get('status', 'unknown')}")
+    print(f"free_models_cached: {data.get('free_models_cached', 0)}")
+    print(f"cache_age_seconds: {data.get('cache_age_seconds')}")
+    print(f"policy: {data.get('policy', 'free-only')}")
+    last = data.get("last_route") or {}
+    if last:
+        print(f"last_scenario: {last.get('scenario', '')}")
+        print(f"last_model: {last.get('final_model', '')}")
+        print(f"last_success: {last.get('success', False)}")
+
+
+def _print_last_human(data: dict) -> None:
+    print(f"scenario: {data.get('scenario', '')}")
+    print(f"confidence: {data.get('scenario_confidence', 0)}")
+    print(f"requested_model: {data.get('requested_model', '')}")
+    print(f"requested_model_allowed: {data.get('requested_model_allowed', False)}")
+    print(f"requested_model_reason: {data.get('requested_model_reason', '')}")
+    print(f"final_model: {data.get('final_model', '')}")
+    print(f"retry_count: {data.get('retry_count', 0)}")
+    print(f"success: {data.get('success', False)}")
+
+
+def _print_cooldowns_human(data: dict) -> None:
+    models = data.get("models") or {}
+    providers = data.get("providers") or {}
+    print(f"model_cooldowns: {len(models)}")
+    print(f"provider_cooldowns: {len(providers)}")
+
+
+def _print_stats_human(data: dict) -> None:
+    models = data.get("models") or {}
+    scenarios = data.get("scenarios") or {}
+    print(f"models_tracked: {len(models)}")
+    print(f"scenarios_tracked: {len(scenarios)}")
+
+
+def cmd_status(args: argparse.Namespace) -> int:
     active = load_active()
     port = active.get("port")
     if not port:
         eprint("Router not running. Start with: claude-free")
         return 1
     try:
-        print(json.dumps(request_json(int(port), "/status"), indent=2))
+        data = request_json(int(port), "/status")
+        if args.human:
+            _print_status_human(data)
+        else:
+            print(json.dumps(data, indent=2))
         return 0
     except (URLError, HTTPError, json.JSONDecodeError):
         eprint("Router not responding. Try: claude-free")
         return 1
 
 
-def cmd_last(_args: argparse.Namespace) -> int:
+def cmd_last(args: argparse.Namespace) -> int:
     active = load_active()
     port = active.get("port")
     if not port:
         eprint("Router not running. Start with: claude-free")
         return 1
     try:
-        print(json.dumps(request_json(int(port), "/last"), indent=2))
+        data = request_json(int(port), "/last")
+        if args.human:
+            _print_last_human(data)
+        else:
+            print(json.dumps(data, indent=2))
         return 0
     except (URLError, HTTPError, json.JSONDecodeError):
         eprint("Router not responding. Try: claude-free")
@@ -675,9 +722,12 @@ def cmd_config_refresh(_args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_cooldowns(_args: argparse.Namespace) -> int:
+def cmd_cooldowns(args: argparse.Namespace) -> int:
     data = read_json_file(COOLDOWNS_FILE, {"models": {}, "providers": {}})
-    print(json.dumps(data, indent=2))
+    if args.human:
+        _print_cooldowns_human(data)
+    else:
+        print(json.dumps(data, indent=2))
     return 0
 
 
@@ -688,12 +738,70 @@ def cmd_cooldowns_clear(_args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_stats(_args: argparse.Namespace) -> int:
+def cmd_stats(args: argparse.Namespace) -> int:
     data = read_json_file(STATS_FILE, {"models": {}, "scenarios": {}})
     data.setdefault("models", {})
     data.setdefault("scenarios", {})
-    print(json.dumps(data, indent=2))
+    if args.human:
+        _print_stats_human(data)
+    else:
+        print(json.dumps(data, indent=2))
     return 0
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    checks: list[dict] = []
+
+    def add(name: str, status: str, message: str = "") -> None:
+        checks.append({"name": name, "status": status, "message": message})
+
+    add("smart-router-cli", "pass" if shutil.which("smart-router") else "warn", "smart-router in PATH")
+    add("claude", "pass" if shutil.which("claude") else "warn", "claude in PATH")
+    add("opencode", "pass" if shutil.which("opencode") else "warn", "opencode in PATH")
+
+    saved_key = read_saved_api_key()
+    env_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if saved_key:
+        add("saved-key", "pass", "saved key found")
+    elif env_key:
+        add("saved-key", "warn", "using env key only")
+    else:
+        add("saved-key", "fail", "no saved/env key found")
+
+    if KEY_FILE.exists():
+        mode = oct(KEY_FILE.stat().st_mode & 0o777)
+        add("key-permissions", "pass" if mode == "0o600" else "warn", f"mode={mode}")
+
+    if saved_key and env_key and saved_key != env_key:
+        add("key-conflict", "warn", "saved key differs from OPENROUTER_API_KEY; saved key will be used")
+
+    if os.environ.get("ANTHROPIC_AUTH_TOKEN"):
+        add("anthropic-auth-token", "fail", "ANTHROPIC_AUTH_TOKEN is set")
+    else:
+        add("anthropic-auth-token", "pass", "not set")
+
+    active = load_active()
+    if active.get("pid"):
+        try:
+            os.kill(int(active.get("pid")), 0)
+            add("active-router-pid", "pass", f"pid={active.get('pid')}")
+        except OSError:
+            add("active-router-pid", "warn", "active pid not running")
+    else:
+        add("active-router-pid", "warn", "no active router session")
+
+    key_for_api = saved_key or env_key
+    if key_for_api:
+        add("openrouter-api", "pass" if verify_key(key_for_api) else "fail", "models API verification")
+
+    ok = all(item["status"] != "fail" for item in checks)
+    if args.json:
+        print(json.dumps({"ok": ok, "checks": checks}, indent=2))
+    else:
+        print("Smart Router Doctor")
+        for item in checks:
+            print(f"{item['status'].upper():5s} {item['name']} {('- ' + item['message']) if item['message'] else ''}")
+    return 0 if ok else 1
 
 
 def cmd_stats_reset(_args: argparse.Namespace) -> int:
@@ -732,8 +840,12 @@ def build_parser() -> argparse.ArgumentParser:
     setup_group.add_argument("--visible", action="store_true", help="Show input while typing")
     setup.set_defaults(func=cmd_setup)
 
-    sub.add_parser("status", help="Show router status", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_status)
-    sub.add_parser("last", help="Show last routed request", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_last)
+    status_cmd = sub.add_parser("status", help="Show router status", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    status_cmd.add_argument("--human", action="store_true", help="Show compact human-readable output")
+    status_cmd.set_defaults(func=cmd_status)
+    last_cmd = sub.add_parser("last", help="Show last routed request", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    last_cmd.add_argument("--human", action="store_true", help="Show compact human-readable output")
+    last_cmd.set_defaults(func=cmd_last)
     models = sub.add_parser("models", help="Show current best free models by scenario", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     models.add_argument("--json", action="store_true", help="Output JSON")
     models.add_argument("--top", type=int, default=3, help="Number of models per scenario")
@@ -772,11 +884,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     cool = sub.add_parser("cooldowns", help="Show active cooldowns", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     cool_sub = cool.add_subparsers(dest="cool_cmd")
+    cool.add_argument("--human", action="store_true", help="Show compact human-readable output")
     cool.set_defaults(func=cmd_cooldowns)
     cool_sub.add_parser("clear", help="Clear all cooldowns").set_defaults(func=cmd_cooldowns_clear)
 
     stats = sub.add_parser("stats", help="Show model stats", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     stats_sub = stats.add_subparsers(dest="stats_cmd")
+    stats.add_argument("--human", action="store_true", help="Show compact human-readable output")
     stats.set_defaults(func=cmd_stats)
     stats_sub.add_parser("reset", help="Reset model stats").set_defaults(func=cmd_stats_reset)
 
@@ -784,6 +898,10 @@ def build_parser() -> argparse.ArgumentParser:
     logs.add_argument("--lines", type=int, default=80, help="Show last N lines")
     logs.add_argument("--path", action="store_true", help="Print log file path")
     logs.set_defaults(func=cmd_logs)
+
+    doctor = sub.add_parser("doctor", help="Run environment and runtime health checks", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    doctor.add_argument("--json", action="store_true", help="Output JSON")
+    doctor.set_defaults(func=cmd_doctor)
 
     return parser
 

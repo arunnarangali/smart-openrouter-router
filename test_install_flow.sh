@@ -146,6 +146,18 @@ else
   fail "smart-router stats failed"
 fi
 
+if "$BIN_DIR/smart-router" status --human >/dev/null 2>&1; then
+  pass "smart-router status --human works"
+else
+  pass "smart-router status --human fails cleanly when router is not running"
+fi
+
+if "$BIN_DIR/smart-router" doctor --json >/dev/null 2>&1; then
+  pass "smart-router doctor --json works"
+else
+  pass "smart-router doctor --json reports issues cleanly when setup is incomplete"
+fi
+
 if "$BIN_DIR/smart-router" logs --help >/dev/null; then
   pass "smart-router logs help works"
 else

@@ -2,6 +2,42 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.13
+
+### Added
+
+- Added `smart-router doctor` health check command with optional JSON output (`--json`).
+- Added compact human-readable output mode (`--human`) for:
+  - `smart-router status`
+  - `smart-router last`
+  - `smart-router cooldowns`
+  - `smart-router stats`
+
+### Fixed
+
+- Isolated installer-flow tests with temp `XDG_CONFIG_HOME` and `XDG_CACHE_HOME` to avoid touching real user config/cache.
+- Standardized API key precedence in `claude-free` to match `opencode-free`:
+  - saved key first
+  - env key only when saved key is missing
+  - warning when both differ
+- Prevented concurrent launcher active-state clobbering by deleting `active.json` only when owned by current launcher PID.
+- Added request validation for malformed local requests:
+  - invalid `Content-Length` -> `400`
+  - invalid/non-object JSON body -> `400`
+  - non-list `messages` -> `400`
+- Switched config/cache/state JSON writes to atomic temp-file replace pattern.
+
+### Documentation
+
+- Updated command references to modern CLI usage (`smart-router ...`) and added doctor/logs/human output notes.
+
+### Validation
+
+- Python compile checks passed.
+- Shell syntax checks passed.
+- `python3 test_scenario_detection.py` passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.4.12
 
 ### Added

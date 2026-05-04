@@ -267,7 +267,7 @@ source ~/.zshrc
 Auto-start should run from `.zshrc`. Check status:
 
 ```bash
-router-status
+smart-router status
 ```
 
 If needed, start manually:
@@ -384,6 +384,8 @@ This makes Claude Code usage much more reliable.
 - `smart-router config path|view|explain|reset|refresh` - config file management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - cooldown visibility/control
 - `smart-router stats` / `smart-router stats reset` - performance stats visibility/control
+- `smart-router logs` - show recent router log lines
+- `smart-router doctor` - run environment/runtime health checks
 - `smart-router reset` - clear runtime state
 - `smart-router reset --all` - uninstall and remove key
 - `smart-router uninstall` - remove installed commands and local state

@@ -114,7 +114,9 @@ def write_active(port: int, pid: int) -> None:
         "pid": pid,
         "started_at": time.time(),
     }
-    ACTIVE_FILE.write_text(json.dumps(payload), encoding="utf-8")
+    temp_path = ACTIVE_FILE.with_name(f"{ACTIVE_FILE.name}.tmp")
+    temp_path.write_text(json.dumps(payload), encoding="utf-8")
+    temp_path.replace(ACTIVE_FILE)
 
 
 def clear_active_if_owned(pid: int) -> None:
