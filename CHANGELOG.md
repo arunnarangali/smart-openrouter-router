@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.15
+
+### Added
+
+- Added `smart-router scenario --explain` to include matched keywords and weights.
+- Added `smart-router scenario --compare <file>` to analyze one prompt per line.
+- Added grouped human output for `smart-router models --human`.
+- Added grouped status field in router `/status` output:
+  - `top_per_scenario_grouped`
+
+### Changed
+
+- Extended `smart-router scenario` to support prompt-file batch analysis.
+- Improved human-readability workflow while keeping JSON defaults unchanged.
+
+### Validation
+
+- Python compile checks passed.
+- `python3 test_scenario_detection.py` passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.4.14
 
 ### Changed

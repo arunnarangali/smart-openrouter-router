@@ -512,6 +512,20 @@ def normalize_openrouter_url(path):
     return f"{OPENROUTER_API_BASE}{path if path.startswith('/') else '/' + path}"
 
 
+def scenario_group_name(scenario: str) -> str:
+    if scenario.startswith("coding_"):
+        return "coding"
+    if scenario.startswith("reasoning_"):
+        return "reasoning"
+    if scenario.startswith("writing_"):
+        return "writing"
+    if scenario.startswith("research_"):
+        return "research"
+    if scenario.startswith("creative_"):
+        return "creative"
+    return "core"
+
+
 class ProxyHandler(BaseHTTPRequestHandler):
     def log_message(self, _format, *args):
         return
@@ -815,6 +829,17 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 )[:3]
             ] if free_models else []
 
+        grouped: dict[str, dict[str, list[str]]] = {
+            "coding": {},
+            "reasoning": {},
+            "writing": {},
+            "research": {},
+            "creative": {},
+            "core": {},
+        }
+        for scenario, models in top_per_scenario.items():
+            grouped.setdefault(scenario_group_name(scenario), {})[scenario] = models
+
         self._json(200, {
             "status": "running",
             "free_models_cached": len(free_models),
@@ -827,6 +852,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             "stats_models_tracked": len((stats.get("models") or {})),
             "stats_scenarios_tracked": len((stats.get("scenarios") or {})),
             "top_per_scenario": top_per_scenario,
+            "top_per_scenario_grouped": grouped,
             "last_route": self._get_last_route(),
         })
 

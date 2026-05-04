@@ -207,7 +207,10 @@ source ~/.zshrc
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
 - `smart-router models` - show current best live free models by scenario
+- `smart-router models --human` - grouped human-readable model summary
 - `smart-router scenario "prompt text"` - inspect scenario detection and confidence
+- `smart-router scenario --explain "prompt text"` - include matched keywords and weights
+- `smart-router scenario --compare prompts.txt` - analyze one prompt per line
 - `smart-router config path|view|explain|reset|refresh` - config management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
 - `smart-router stats` / `smart-router stats reset` - inspect or clear model stats

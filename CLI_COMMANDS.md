@@ -25,9 +25,12 @@
 
 - `smart-router models` - Show current best free models by scenario
 - `smart-router models --json` - Output JSON
+- `smart-router models --human` - Grouped human-readable model summary
 - `smart-router models --top` - Number of models per scenario
 - `smart-router scenario "prompt text"` - Analyze detected scenario with scores/confidence
 - `smart-router scenario --top 10 "prompt text"` - Show top N scenario scores
+- `smart-router scenario --explain "prompt text"` - Include matched keywords and weights
+- `smart-router scenario --compare prompts.txt` - Analyze one prompt per file line
 
 ## Version and Upgrade
 

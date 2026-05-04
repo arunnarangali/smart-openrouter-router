@@ -552,6 +552,25 @@ def cmd_models(args: argparse.Namespace) -> int:
         print(json.dumps(result, indent=2))
         return 0
 
+    if args.human:
+        groups = {
+            "coding": [s for s in SCENARIOS if s.startswith("coding_")],
+            "reasoning": [s for s in SCENARIOS if s.startswith("reasoning_")],
+            "writing": [s for s in SCENARIOS if s.startswith("writing_")],
+            "research": [s for s in SCENARIOS if s.startswith("research_")],
+            "creative": [s for s in SCENARIOS if s.startswith("creative_")],
+            "core": [s for s in SCENARIOS if not any(s.startswith(prefix) for prefix in ["coding_", "reasoning_", "writing_", "research_", "creative_"])],
+        }
+        print("Current best free OpenRouter models")
+        for group, entries in groups.items():
+            print(f"\n[{group}]")
+            for scenario in entries:
+                top = result["scenarios"].get(scenario, [])
+                first = top[0] if top else "n/a"
+                print(f"  {scenario}: {first}")
+        print("\nNote: Runtime may still skip models due to cooldowns, stats, quota, or tool support.")
+        return 0
+
     print("Current best free OpenRouter models")
     for scenario in SCENARIOS:
         print(f"\n{scenario}:")
@@ -562,9 +581,35 @@ def cmd_models(args: argparse.Namespace) -> int:
 
 
 def cmd_scenario(args: argparse.Namespace) -> int:
-    result = analyze_prompt_text(args.prompt)
     top_n = max(1, int(args.top))
+    if not args.compare and not str(args.prompt or "").strip():
+        eprint("Provide a prompt or use --compare <file>.")
+        return 1
+    if args.compare:
+        path = Path(args.compare)
+        if not path.exists() or not path.is_file():
+            eprint(f"Prompt file not found: {path}")
+            return 1
+        rows = []
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            prompt = line.strip()
+            if not prompt:
+                continue
+            result = analyze_prompt_text(prompt, explain=args.explain)
+            rows.append({
+                "prompt": prompt,
+                "detected_scenario": result["detected_scenario"],
+                "scenario_confidence": result["scenario_confidence"],
+                "top_scenarios": result["top_scenarios"][:top_n],
+                "matched_keywords": result.get("matched_keywords", {}),
+            })
+        print(json.dumps({"count": len(rows), "results": rows}, indent=2))
+        return 0
+
+    result = analyze_prompt_text(args.prompt or "", explain=args.explain)
     result["top_scenarios"] = result["top_scenarios"][:top_n]
+    if not args.explain:
+        result.pop("matched_keywords", None)
     print(json.dumps(result, indent=2))
     return 0
 
@@ -738,10 +783,13 @@ def build_parser() -> argparse.ArgumentParser:
     last_cmd.set_defaults(func=cmd_last)
     models = sub.add_parser("models", help="Show current best free models by scenario", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     models.add_argument("--json", action="store_true", help="Output JSON")
+    models.add_argument("--human", action="store_true", help="Show grouped human-readable output")
     models.add_argument("--top", type=int, default=3, help="Number of models per scenario")
     models.set_defaults(func=cmd_models)
     scenario = sub.add_parser("scenario", help="Analyze prompt scenario detection", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
-    scenario.add_argument("prompt", help="Prompt text to analyze")
+    scenario.add_argument("prompt", nargs="?", default="", help="Prompt text to analyze")
+    scenario.add_argument("--compare", default="", help="Path to a text file with one prompt per line")
+    scenario.add_argument("--explain", action="store_true", help="Include matched keywords and weights")
     scenario.add_argument("--top", type=int, default=5, help="Show top N scenario scores")
     scenario.set_defaults(func=cmd_scenario)
     sub.add_parser("version", help="Show installed version", epilog=HELP_EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter).set_defaults(func=cmd_version)

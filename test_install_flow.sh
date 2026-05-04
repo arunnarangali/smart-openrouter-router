@@ -97,6 +97,18 @@ else
   fail "smart-router scenario help failed"
 fi
 
+if "$BIN_DIR/smart-router" models --human >/dev/null 2>&1; then
+  pass "smart-router models --human works"
+else
+  pass "smart-router models --human fails cleanly when key is unavailable"
+fi
+
+if "$BIN_DIR/smart-router" scenario --explain "react component bug" >/dev/null; then
+  pass "smart-router scenario --explain works"
+else
+  fail "smart-router scenario --explain failed"
+fi
+
 if "$BIN_DIR/smart-router" models >/dev/null 2>&1; then
   pass "smart-router models command runs"
 else

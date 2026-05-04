@@ -111,13 +111,19 @@ def _specificity(scenario: str) -> int:
     return 0 if scenario.endswith("_general") else 1
 
 
-def analyze_prompt_text(text: str) -> dict:
+def analyze_prompt_text(text: str, explain: bool = False) -> dict:
     text_lc = str(text or "").lower()
     scores = {scenario: 0 for scenario in SCENARIOS}
+    matched_keywords: dict[str, list[dict[str, int | str]]] = {}
     for scenario, keywords in SCENARIO_KEYWORDS.items():
+        matches: list[dict[str, int | str]] = []
         for keyword, weight in keywords.items():
             if keyword in text_lc:
                 scores[scenario] += int(weight)
+                if explain:
+                    matches.append({"keyword": keyword, "weight": int(weight)})
+        if explain and matches:
+            matched_keywords[scenario] = matches
 
     detected = max(SCENARIOS, key=lambda s: (scores[s], _specificity(s)))
     if scores[detected] <= 0:
@@ -130,8 +136,9 @@ def analyze_prompt_text(text: str) -> dict:
     return {
         "detected_scenario": detected,
         "scenario_scores": scores,
-        "top_scenarios": positive[:5],
+        "top_scenarios": positive,
         "scenario_confidence": confidence,
+        "matched_keywords": matched_keywords if explain else {},
     }
 
 
