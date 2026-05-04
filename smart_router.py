@@ -32,46 +32,84 @@ COOLDOWNS_FILE = CACHE_DIR / "cooldowns.json"
 STATS_FILE = CACHE_DIR / "stats.json"
 
 
+SCENARIOS = [
+    "coding_general",
+    "coding_frontend",
+    "coding_backend",
+    "coding_debugging",
+    "coding_refactor",
+    "coding_testing",
+    "coding_devops",
+    "coding_database",
+    "coding_architecture",
+    "coding_security",
+    "coding_performance",
+    "coding_mobile",
+    "coding_ai_ml",
+    "coding_docs",
+    "coding_review",
+    "reasoning_general",
+    "reasoning_math",
+    "reasoning_analysis",
+    "reasoning_planning",
+    "reasoning_architecture",
+    "reasoning_debug",
+    "reasoning_review",
+    "reasoning_legal_policy",
+    "reasoning_finance",
+    "writing_general",
+    "writing_docs",
+    "writing_email",
+    "writing_summary",
+    "writing_rewrite",
+    "research_general",
+    "research_fact_check",
+    "creative_general",
+    "creative_story",
+    "creative_marketing",
+    "vision",
+    "long_context",
+    "fast",
+]
+
 SCENARIO_KEYWORDS = {
-    "coding": [
-        "code", "function", "debug", "error", "implement", "class", "script",
-        "python", "javascript", "typescript", "rust", "golang", "java", "c++",
-        "fix", "bug", "refactor", "test", "api", "database", "sql", "bash",
-        "shell", "git", "algorithm", "data structure", "compile", "syntax",
-        "library", "framework", "react", "fastapi", "flask", "django", "node",
-    ],
-    "reasoning": [
-        "analyze", "compare", "explain why", "reason", "logic", "evaluate",
-        "pros and cons", "trade-off", "decision", "strategy", "plan",
-        "architecture", "design", "think", "consider", "assess", "review",
-        "critique", "problem", "solve", "step by step", "break down",
-    ],
-    "writing": [
-        "write", "essay", "blog", "article", "summarize", "summary", "draft",
-        "email", "letter", "report", "document", "edit", "proofread", "story",
-        "content", "paragraph", "translate", "rewrite", "improve", "tone",
-        "creative", "describe", "explain", "tutorial", "readme", "docs",
-    ],
-    "vision": [
-        "image", "photo", "screenshot", "ocr", "visual", "analyze image",
-        "describe image", "read image", "face detect", "object detect",
-        "picture", "look at", "what is in", "extract text from",
-    ],
-    "long-context": [
-        "document", "pdf", "file", "analyze file", "process file",
-        "large file", "batch", "summarize document", "paper", "paper",
-        "chapter", "book", "full text",
-    ],
-    "research": [
-        "search", "web search", "find information", "look up", "browse",
-        "gather information", "investigate", "fact check", "explain",
-        "what is", "who is", "when did", "where",
-    ],
-    "creative": [
-        "story", "poem", "write poem", "creative writing", "joke",
-        "song", "narrative", "script", "screenplay", "fiction",
-        "creative", "make up", "invent",
-    ],
+    "coding_general": {"code": 2, "function": 2, "class": 2, "implement": 2, "script": 2, "program": 2, "repository": 1},
+    "coding_frontend": {"react": 4, "component": 3, "css": 3, "tailwind": 4, "ui": 3, "layout": 3, "frontend": 4, "typescript": 2, "javascript": 2, "responsive": 3},
+    "coding_backend": {"api": 4, "endpoint": 3, "backend": 4, "server": 3, "auth": 3, "middleware": 3, "fastapi": 3, "flask": 3, "express": 3, "service": 2},
+    "coding_debugging": {"debug": 4, "error": 3, "bug": 3, "traceback": 5, "stack trace": 5, "exception": 4, "failing": 3, "fix": 3, "crash": 4},
+    "coding_refactor": {"refactor": 5, "cleanup": 3, "simplify": 3, "restructure": 3, "maintainability": 3, "readability": 2},
+    "coding_testing": {"test": 3, "pytest": 4, "jest": 4, "mock": 3, "fixture": 3, "coverage": 3, "unit test": 4, "integration test": 4},
+    "coding_devops": {"docker": 4, "kubernetes": 4, "ci": 3, "github actions": 4, "deploy": 3, "linux": 3, "bash": 3, "shell": 3, "nginx": 3},
+    "coding_database": {"sql": 4, "postgres": 4, "mysql": 4, "sqlite": 3, "schema": 3, "migration": 3, "query": 3, "index": 3, "database": 4},
+    "coding_architecture": {"architecture": 4, "design": 3, "scalable": 3, "module": 2, "monolith": 2, "microservice": 3},
+    "coding_security": {"security": 4, "vulnerability": 4, "xss": 5, "csrf": 5, "injection": 4, "secret": 3, "permission": 3, "authz": 3},
+    "coding_performance": {"performance": 4, "optimize": 4, "latency": 3, "memory": 3, "bottleneck": 3, "profiling": 3, "slow": 3},
+    "coding_mobile": {"android": 4, "ios": 4, "react native": 5, "flutter": 5, "swift": 3, "kotlin": 3, "mobile": 4},
+    "coding_ai_ml": {"llm": 4, "embedding": 4, "vector": 3, "rag": 4, "inference": 3, "model": 2, "agent": 3, "ml": 3},
+    "coding_docs": {"readme": 4, "documentation": 4, "docstring": 3, "api docs": 4, "comment": 2},
+    "coding_review": {"code review": 5, "review this code": 5, "regression": 3, "lint": 2, "smell": 2},
+    "reasoning_general": {"reason": 2, "analyze": 2, "evaluate": 2, "consider": 2, "tradeoff": 2, "decision": 2, "logic": 2},
+    "reasoning_math": {"math": 4, "equation": 4, "proof": 5, "formula": 4, "calculate": 3, "probability": 4, "theorem": 4},
+    "reasoning_analysis": {"compare": 4, "pros and cons": 4, "trade-off": 4, "analysis": 3, "evaluate": 3},
+    "reasoning_planning": {"plan": 4, "roadmap": 4, "step by step": 4, "strategy": 3, "milestone": 3},
+    "reasoning_architecture": {"system design": 5, "architecture": 5, "scalable": 3, "distributed": 3, "tradeoff": 3},
+    "reasoning_debug": {"root cause": 5, "why failed": 4, "diagnose": 4, "investigate failure": 4},
+    "reasoning_review": {"critique": 4, "risk": 3, "review": 3, "assessment": 3, "concern": 2},
+    "reasoning_legal_policy": {"policy": 4, "legal": 4, "compliance": 4, "regulation": 3, "license": 3, "terms": 3},
+    "reasoning_finance": {"roi": 5, "budget": 4, "pricing": 4, "cost": 3, "revenue": 3, "profit": 3},
+    "writing_general": {"write": 2, "draft": 2, "article": 2, "paragraph": 2, "tone": 2},
+    "writing_docs": {"documentation": 4, "readme": 4, "guide": 3, "manual": 3, "tutorial": 3},
+    "writing_email": {"email": 5, "reply": 4, "message": 3, "subject line": 3},
+    "writing_summary": {"summarize": 5, "summary": 5, "key points": 4, "condense": 3},
+    "writing_rewrite": {"rewrite": 5, "rephrase": 4, "improve": 3, "clarity": 3, "polish": 3},
+    "research_general": {"research": 4, "search": 3, "look up": 3, "investigate": 3, "find information": 3},
+    "research_fact_check": {"fact check": 5, "verify": 4, "source": 3, "evidence": 3, "accurate": 3},
+    "creative_general": {"creative": 4, "invent": 3, "idea": 2, "brainstorm": 3},
+    "creative_story": {"story": 5, "fiction": 4, "poem": 4, "narrative": 4, "character": 3, "plot": 3},
+    "creative_marketing": {"marketing": 5, "ad": 4, "copy": 4, "hook": 4, "slogan": 4, "landing page": 4},
+    "vision": {"image": 4, "photo": 4, "screenshot": 4, "ocr": 4, "visual": 3, "describe image": 4},
+    "long_context": {"large file": 4, "full text": 4, "long document": 4, "chapter": 3, "book": 3, "pdf": 3},
+    "fast": {"quick": 3, "fast": 4, "short answer": 3, "brief": 3},
 }
 
 CODING_TAGS = {"coding", "code", "programming", "instruct"}
@@ -142,58 +180,24 @@ last_route_lock = threading.Lock()
 
 
 def default_config():
+    default_profile = {
+        "preferred": [],
+        "prefer_patterns": [],
+        "avoid_patterns": ["audio", "music", "tts", "embedding"],
+        "min_context": 8000,
+    }
+    profiles = {name: dict(default_profile) for name in SCENARIOS}
+    profiles["coding_general"].update({"prefer_patterns": ["coder", "code", "qwen", "deepseek", "instruct"], "min_context": 16000})
+    profiles["reasoning_general"].update({"prefer_patterns": ["reasoning", "think", "r1", "qwq", "qwen", "deepseek"], "min_context": 32000})
+    profiles["writing_general"].update({"prefer_patterns": ["llama", "gemma", "mistral", "chat", "instruct"], "min_context": 8000})
+    profiles["vision"].update({"prefer_patterns": ["vision", "multimodal", "image", "pixel"], "avoid_patterns": ["tiny", "3b", "4b", "flash"], "min_context": 4096})
+    profiles["long_context"].update({"prefer_patterns": ["large", "128k", "200k", "context"], "avoid_patterns": ["tiny", "3b"], "min_context": 32000})
+    profiles["fast"].update({"prefer_patterns": ["flash", "mini", "small", "3b", "4b", "7b", "8b"], "avoid_patterns": ["405b", "120b", "large"], "min_context": 4096})
+    profiles["research_general"].update({"prefer_patterns": ["flash", "mini", "small", "fast"], "min_context": 4096})
+    profiles["creative_general"].update({"prefer_patterns": ["creative", "story", "gemma", "llama"], "min_context": 8192})
     return {
         "policy": {"mode": "free-only", "allow_paid_fallback": False},
-        "profiles": {
-            "coding": {
-                "preferred": [],
-                "prefer_patterns": ["coder", "code", "qwen", "deepseek", "instruct"],
-                "avoid_patterns": ["vision", "image", "audio", "music", "tiny"],
-                "min_context": 16000,
-            },
-            "reasoning": {
-                "preferred": [],
-                "prefer_patterns": ["reasoning", "think", "r1", "qwq", "qwen", "deepseek"],
-                "avoid_patterns": ["vision", "image", "audio", "music", "tiny"],
-                "min_context": 32000,
-            },
-            "writing": {
-                "preferred": [],
-                "prefer_patterns": ["llama", "gemma", "mistral", "chat", "instruct"],
-                "avoid_patterns": ["coder", "vision", "image", "audio", "music"],
-                "min_context": 8000,
-            },
-            "fast": {
-                "preferred": [],
-                "prefer_patterns": ["flash", "mini", "small", "3b", "4b", "7b", "8b"],
-                "avoid_patterns": ["405b", "120b", "large"],
-                "min_context": 8000,
-            },
-            "vision": {
-                "preferred": [],
-                "prefer_patterns": ["vision", "multimodal", "image", "pixel", "vision"],
-                "avoid_patterns": ["tiny", "3b", "4b", "flash"],
-                "min_context": 4096,
-            },
-            "long-context": {
-                "preferred": [],
-                "prefer_patterns": ["large", "128k", "200k", "context"],
-                "avoid_patterns": ["vision", "image", "tiny", "3b"],
-                "min_context": 32000,
-            },
-            "research": {
-                "preferred": [],
-                "prefer_patterns": ["flash", "mini", "small", "fast"],
-                "avoid_patterns": [],
-                "min_context": 4096,
-            },
-            "creative": {
-                "preferred": [],
-                "prefer_patterns": ["creative", "story", "gemma", "llama"],
-                "avoid_patterns": ["coding", "coder"],
-                "min_context": 8192,
-            },
-        },
+        "profiles": profiles,
     }
 
 
@@ -238,10 +242,11 @@ def load_cooldowns():
 
 
 def load_stats():
-    data = load_json(STATS_FILE, {"models": {}})
+    data = load_json(STATS_FILE, {"models": {}, "scenarios": {}})
     if not isinstance(data, dict):
-        return {"models": {}}
+        return {"models": {}, "scenarios": {}}
     data.setdefault("models", {})
+    data.setdefault("scenarios", {})
     return data
 
 
@@ -275,21 +280,39 @@ def _content_to_text(content):
     return ""
 
 
-def detect_scenario(messages):
+def _specificity(scenario: str) -> int:
+    return 0 if scenario.endswith("_general") else 1
+
+
+def analyze_scenario(messages):
     text = " ".join(_content_to_text(msg.get("content")) for msg in messages).lower()
-    scores = {scenario: 0 for scenario in SCENARIO_KEYWORDS}
+    scores = {scenario: 0 for scenario in SCENARIOS}
 
     for scenario, keywords in SCENARIO_KEYWORDS.items():
-        for keyword in keywords:
+        for keyword, weight in keywords.items():
             if keyword in text:
-                scores[scenario] += 1
+                scores[scenario] += int(weight)
 
-    best = max(scores, key=scores.get)
-    if scores[best] == 0:
-        best = "reasoning"
+    best = max(SCENARIOS, key=lambda s: (scores[s], _specificity(s)))
+    if scores[best] <= 0:
+        best = "reasoning_general"
+
+    positive = sorted([(name, value) for name, value in scores.items() if value > 0], key=lambda item: item[1], reverse=True)
+    top_score = positive[0][1] if positive else 0
+    total = sum(value for _name, value in positive)
+    confidence = round((top_score / total), 3) if total > 0 else 0.0
 
     log.info("Scenario scores: %s; selected=%s", scores, best)
-    return best
+    return {
+        "detected_scenario": best,
+        "scenario_scores": scores,
+        "top_scenarios": positive[:5],
+        "scenario_confidence": confidence,
+    }
+
+
+def detect_scenario(messages):
+    return analyze_scenario(messages)["detected_scenario"]
 
 
 def model_supports_tools(model):
@@ -324,7 +347,7 @@ def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=No
         elif ctx >= 8000:
             value += 5
 
-        if scenario == "coding":
+        if scenario.startswith("coding_"):
             if tags & CODING_TAGS:
                 value += 40
             if "coder" in combined:
@@ -337,7 +360,15 @@ def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=No
                 value += 15
             if "instruct" in combined:
                 value += 10
-        elif scenario == "reasoning":
+            if scenario == "coding_debugging" and ("reason" in combined or "think" in combined):
+                value += 12
+            if scenario == "coding_architecture" and ctx >= 32000:
+                value += 12
+            if scenario == "coding_security" and ("guard" in combined or "safe" in combined):
+                value += 8
+            if scenario == "coding_performance" and ("fast" in combined or "flash" in combined):
+                value += 8
+        elif scenario.startswith("reasoning_"):
             if tags & REASONING_TAGS:
                 value += 40
             if "reasoning" in combined:
@@ -350,7 +381,9 @@ def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=No
                 value += 25
             if "gemini" in combined:
                 value += 20
-        elif scenario == "writing":
+            if scenario == "reasoning_math" and "math" in combined:
+                value += 12
+        elif scenario.startswith("writing_"):
             if tags & WRITING_TAGS:
                 value += 40
             if "creative" in combined:
@@ -363,6 +396,25 @@ def rank_models(models, scenario, tool_request=False, profile=None, cooldowns=No
                 value += 15
             if "chat" in combined:
                 value += 10
+        elif scenario.startswith("research_"):
+            if "flash" in combined or "mini" in combined:
+                value += 15
+            if "search" in combined:
+                value += 10
+        elif scenario.startswith("creative_"):
+            if "creative" in combined or "story" in combined:
+                value += 18
+            if "chat" in combined:
+                value += 8
+        elif scenario == "long_context":
+            if ctx >= 128000:
+                value += 20
+        elif scenario == "vision":
+            if "vision" in combined or "image" in combined:
+                value += 20
+        elif scenario == "fast":
+            if any(x in combined for x in ["flash", "mini", "small", "3b", "4b", "7b", "8b"]):
+                value += 20
 
         if tool_request:
             if model_supports_tools(model):
@@ -442,17 +494,22 @@ def choose_fast_model(ranked_models):
     return ranked_models[0].get("id") if ranked_models else None
 
 
-def select_candidates(ranked_models, requested_model_raw):
-    # ALWAYS use ranked free models with fallback
-    # Ignore whatever model client sent - router decides
-    requested = requested_model_raw.lower()
-    # Detect smart-router/* as UI placeholders - ignore them
-    if requested.startswith("smart-router/"):
-        free_model_ids = [m.get("id") for m in ranked_models if m.get("id")]
-        return free_model_ids, "free-ranked"
-    # Default: always use free model ranking
-    free_model_ids = [m.get("id") for m in ranked_models if m.get("id")]
-    return free_model_ids, "free-ranked"
+def select_candidates(ranked_models, free_models, requested_model_raw):
+    ranked_ids = [m.get("id") for m in ranked_models if m.get("id")]
+    requested = requested_model_raw.strip()
+    requested_lower = requested.lower()
+
+    if not requested:
+        return ranked_ids, "free-ranked", False, "empty-request"
+    if requested_lower.startswith("smart-router/"):
+        return ranked_ids, "free-ranked", False, "smart-router-placeholder"
+
+    free_ids = {str(m.get("id") or "") for m in free_models}
+    if requested in free_ids:
+        ordered = [requested] + [model_id for model_id in ranked_ids if model_id != requested]
+        return ordered, "client-free-first", True, "free-model-first"
+
+    return ranked_ids, "client-nonfree-skipped", False, "not-free-or-not-found"
 
 
 def parse_error_details(body_bytes):
@@ -516,7 +573,7 @@ def cooldown_seconds_for_error(status, message):
     return 10 * 60
 
 
-def update_stats(model_id, success, latency_ms, status, provider=""):
+def update_stats(model_id, success, latency_ms, status, provider="", scenario=""):
     stats = load_stats()
     models = stats.setdefault("models", {})
     item = models.setdefault(model_id, {"successes": 0, "failures": 0, "avg_latency_ms": 0, "last_status": 0})
@@ -535,6 +592,28 @@ def update_stats(model_id, success, latency_ms, status, provider=""):
     if provider:
         item["last_provider"] = provider
     item["last_updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    if scenario:
+        scenarios = stats.setdefault("scenarios", {})
+        scen = scenarios.setdefault(
+            scenario,
+            {"requests": 0, "successes": 0, "failures": 0, "avg_latency_ms": 0, "last_status": 0, "last_model": ""},
+        )
+        scen["requests"] = int(scen.get("requests", 0)) + 1
+        if success:
+            scen["successes"] = int(scen.get("successes", 0)) + 1
+        else:
+            scen["failures"] = int(scen.get("failures", 0)) + 1
+        scen_current_avg = float(scen.get("avg_latency_ms", 0) or 0)
+        scen_total = int(scen.get("requests", 0))
+        if scen_total <= 1:
+            scen["avg_latency_ms"] = int(latency_ms)
+        else:
+            scen["avg_latency_ms"] = int(((scen_current_avg * (scen_total - 1)) + latency_ms) / scen_total)
+        scen["last_status"] = int(status or 0)
+        scen["last_model"] = model_id
+        scen["last_updated_at"] = datetime.now(timezone.utc).isoformat()
+
     save_json(STATS_FILE, stats)
 
 
@@ -600,7 +679,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         body = self._read_json_body()
         accept_header = (self.headers.get("Accept") or "").lower()
         stream_requested = bool(body.get("stream")) or "text/event-stream" in accept_header
-        scenario = detect_scenario(body.get("messages", []))
+        scenario_analysis = analyze_scenario(body.get("messages", []))
+        scenario = scenario_analysis["detected_scenario"]
         free_models = model_cache.get_free_models(api_key)
 
         if not free_models:
@@ -614,7 +694,6 @@ class ProxyHandler(BaseHTTPRequestHandler):
         router_config = load_router_config()
         cooldowns = load_cooldowns()
         stats = load_stats()
-        # ALWAYS use scenario detection from prompt
         profile_key = scenario
         profile = (router_config.get("profiles") or {}).get(profile_key, {})
 
@@ -627,7 +706,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
             stats=stats,
         )
         requested_model_raw = str(body.get("model") or "")
-        candidates, routing_tier = select_candidates(ranked_models, requested_model_raw)
+        candidates, routing_tier, requested_model_allowed, requested_model_reason = select_candidates(
+            ranked_models,
+            free_models,
+            requested_model_raw,
+        )
         candidates = [c for c in candidates if c]
 
         if not candidates:
@@ -682,7 +765,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     final_model = chosen
                     latency_ms = int((time.time() - attempt_started) * 1000)
                     final_latency_ms = latency_ms
-                    update_stats(chosen, True, latency_ms, final_status)
+                    update_stats(chosen, True, latency_ms, final_status, scenario=scenario)
                     if stream_requested:
                         self._proxy_stream(
                             resp,
@@ -710,7 +793,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 latency_ms = int((time.time() - attempt_started) * 1000)
                 final_latency_ms = latency_ms
                 provider_name = err_details.get("provider", "")
-                update_stats(chosen, False, latency_ms, err_status, provider_name)
+                update_stats(chosen, False, latency_ms, err_status, provider_name, scenario=scenario)
                 cooldowns_added.append(
                     add_cooldown(chosen, provider_name, err_status, err_details.get("message", "")[:300])
                 )
@@ -739,7 +822,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 })
                 latency_ms = int((time.time() - attempt_started) * 1000)
                 final_latency_ms = latency_ms
-                update_stats(chosen, False, latency_ms, 502)
+                update_stats(chosen, False, latency_ms, 502, scenario=scenario)
                 cooldowns_added.append(add_cooldown(chosen, "", 502, str(exc)))
                 log.warning("Model failed model=%s status=502 reason=%s", chosen, str(exc))
 
@@ -778,6 +861,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
             tool_request=tool_request,
             latency_ms=final_latency_ms,
             cooldowns_added=cooldowns_added,
+            requested_model_allowed=requested_model_allowed,
+            requested_model_reason=requested_model_reason,
+            scenario_scores=scenario_analysis["scenario_scores"],
+            top_scenarios=scenario_analysis["top_scenarios"],
+            scenario_confidence=scenario_analysis["scenario_confidence"],
         )
         if streamed:
             return
@@ -835,7 +923,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         router_config = load_router_config()
         cooldowns = load_cooldowns()
         stats = load_stats()
-        for scenario in ["coding", "reasoning", "writing"]:
+        for scenario in SCENARIOS:
             profile = (router_config.get("profiles") or {}).get(scenario, {})
             top_per_scenario[scenario] = [
                 m["id"]
@@ -859,6 +947,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             "model_cooldowns_active": len((cooldowns.get("models") or {})),
             "provider_cooldowns_active": len((cooldowns.get("providers") or {})),
             "stats_models_tracked": len((stats.get("models") or {})),
+            "stats_scenarios_tracked": len((stats.get("scenarios") or {})),
             "top_per_scenario": top_per_scenario,
             "last_route": self._get_last_route(),
         })
@@ -870,11 +959,17 @@ class ProxyHandler(BaseHTTPRequestHandler):
         with last_route_lock:
             return dict(last_route)
 
-    def _record_last_route(self, requested_model, final_model, scenario, tier, retry_count, failed_models, status, path, success, tool_request, latency_ms, cooldowns_added):
+    def _record_last_route(self, requested_model, final_model, scenario, tier, retry_count, failed_models, status, path, success, tool_request, latency_ms, cooldowns_added, requested_model_allowed, requested_model_reason, scenario_scores, top_scenarios, scenario_confidence):
         payload = {
             "requested_model": requested_model,
+            "requested_model_allowed": requested_model_allowed,
+            "requested_model_reason": requested_model_reason,
             "final_model": final_model,
             "scenario": scenario,
+            "detected_scenario": scenario,
+            "scenario_scores": scenario_scores,
+            "top_scenarios": top_scenarios,
+            "scenario_confidence": scenario_confidence,
             "tier": tier,
             "retry_count": retry_count,
             "success": success,

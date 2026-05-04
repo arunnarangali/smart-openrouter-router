@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.4.12
+
+### Added
+
+- Added Phase 2 scenario visibility in router `/last` output:
+  - `detected_scenario`
+  - `scenario_scores`
+  - `top_scenarios`
+  - `scenario_confidence`
+- Added `smart-router scenario "prompt text"` command to manually inspect scenario detection.
+- Added per-scenario runtime stats under `stats.scenarios` (requests, successes/failures, latency, last model/status).
+- Added `test_scenario_detection.py` for common prompt-to-scenario checks.
+
+### Changed
+
+- Extended CLI scenario/config model loops to full scenario set.
+- Kept free-only enforcement while respecting client-sent model IDs only when they are exact live free-model matches.
+
+### Validation
+
+- Python compile checks passed.
+- `bash test_install_flow.sh` passed.
+
 ## v0.4.11
 
 ### Added

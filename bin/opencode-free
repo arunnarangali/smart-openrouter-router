@@ -141,6 +141,9 @@ def print_tail_log(lines: int = 40) -> None:
 
 
 def runtime_opencode_config(port: int, api_key: str) -> str:
+    # OpenCode currently expects concrete provider model IDs for dropdown/UI wiring.
+    # These IDs are placeholders only: smart_router.py always overwrites the request
+    # model with its own ranked free-model selection before forwarding upstream.
     payload = {
         "$schema": "https://opencode.ai/config.json",
         "provider": {
@@ -152,8 +155,8 @@ def runtime_opencode_config(port: int, api_key: str) -> str:
                     "apiKey": api_key,
                 },
                 "models": {
-                    "build": {"id": "openai/gpt-4o-mini", "name": "Smart Router Build"},
-                    "plan": {"id": "google/gemini-2.0-flash-exp", "name": "Smart Router Plan"},
+                    "build": {"id": "openai/gpt-4o-mini", "name": "Smart Router Build (Free Auto)"},
+                    "plan": {"id": "google/gemini-2.0-flash-exp", "name": "Smart Router Plan (Free Auto)"},
                 },
             }
         },

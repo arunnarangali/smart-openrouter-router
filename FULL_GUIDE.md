@@ -145,6 +145,10 @@ claude-free
 opencode-free
 ```
 
+OpenCode note: dropdown model entries are compatibility placeholders for
+OpenCode UI/provider wiring. The router still ignores those client model IDs
+and enforces free-only ranked selection at runtime.
+
 The router starts automatically for this session and stops when Claude exits.
 
 Check status and last route:
@@ -376,6 +380,7 @@ This makes Claude Code usage much more reliable.
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
 - `smart-router models` - current best live free models by scenario
+- `smart-router scenario "prompt text"` - show detected scenario, score table, and confidence
 - `smart-router config path|view|explain|reset|refresh` - config file management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - cooldown visibility/control
 - `smart-router stats` / `smart-router stats reset` - performance stats visibility/control
@@ -389,6 +394,12 @@ This makes Claude Code usage much more reliable.
 
 - If the client requests streaming (`stream=true` or `Accept: text/event-stream`), output is forwarded incrementally.
 - Retries only occur before streaming starts; the router cannot switch models mid-stream.
+
+### Client model behavior
+
+- If client sends an explicit model ID, router checks live free models first.
+- It is used first only when it is an exact free-model match.
+- Paid/non-free/not-found IDs are skipped, then router continues with ranked free fallback models.
 
 ### Reset behavior
 

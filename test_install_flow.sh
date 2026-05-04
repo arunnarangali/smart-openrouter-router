@@ -46,6 +46,7 @@ python3 -m py_compile "$ROOT_DIR/smart_router.py"
 python3 -m py_compile "$ROOT_DIR/bin/smart-router"
 python3 -m py_compile "$ROOT_DIR/bin/claude-free"
 python3 -m py_compile "$ROOT_DIR/bin/opencode-free"
+python3 -m py_compile "$ROOT_DIR/test_scenario_detection.py"
 pass "Python syntax checks passed"
 
 bash -n "$ROOT_DIR/install.sh"
@@ -83,6 +84,12 @@ if "$BIN_DIR/smart-router" models --help >/dev/null; then
   pass "smart-router models help works"
 else
   fail "smart-router models help failed"
+fi
+
+if "$BIN_DIR/smart-router" scenario --help >/dev/null; then
+  pass "smart-router scenario help works"
+else
+  fail "smart-router scenario help failed"
 fi
 
 if "$BIN_DIR/smart-router" models >/dev/null 2>&1; then
@@ -125,6 +132,12 @@ if "$BIN_DIR/smart-router" stats >/dev/null; then
   pass "smart-router stats works"
 else
   fail "smart-router stats failed"
+fi
+
+if python3 "$ROOT_DIR/test_scenario_detection.py" >/dev/null; then
+  pass "scenario detection tests passed"
+else
+  fail "scenario detection tests failed"
 fi
 
 if grep -R -E 'sk-or-v1-[A-Za-z0-9]{20,}|OPENROUTER_API_KEY="sk-or-v1-[A-Za-z0-9]{20,}' "$ROOT_DIR" --exclude-dir=.git >/dev/null 2>&1; then

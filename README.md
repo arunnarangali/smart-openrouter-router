@@ -55,6 +55,10 @@ OpenCode:
 opencode-free
 ```
 
+Note: OpenCode model entries are compatibility placeholders for the UI/provider.
+At runtime, the router ignores those client-sent IDs and selects ranked free
+OpenRouter models automatically.
+
 Installer/developer verification:
 
 ```bash
@@ -202,6 +206,7 @@ source ~/.zshrc
 - `smart-router status` - router status
 - `smart-router last` - last routed request metadata
 - `smart-router models` - show current best live free models by scenario
+- `smart-router scenario "prompt text"` - inspect scenario detection and confidence
 - `smart-router config path|view|explain|reset|refresh` - config management
 - `smart-router cooldowns` / `smart-router cooldowns clear` - inspect or clear cooldowns
 - `smart-router stats` / `smart-router stats reset` - inspect or clear model stats
@@ -219,6 +224,11 @@ lists for coding, reasoning, writing, and fast profiles in:
 - `~/.config/smart-openrouter-router/config.json`
 
 The router still enforces free-only filtering at runtime.
+
+Client model rule:
+
+- If a client sends a concrete model ID, router tries it first only when it is an exact match in the live free model list.
+- If the model is paid/non-free/not-found (or a `smart-router/*` placeholder), router skips it and uses ranked free models.
 
 Use `smart-router models` to view current best live free models without modifying config.
 

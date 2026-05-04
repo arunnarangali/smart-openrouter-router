@@ -22,6 +22,8 @@
 - `smart-router models` - Show current best free models by scenario
 - `smart-router models --json` - Output JSON
 - `smart-router models --top` - Number of models per scenario
+- `smart-router scenario "prompt text"` - Analyze detected scenario with scores/confidence
+- `smart-router scenario --top 10 "prompt text"` - Show top N scenario scores
 
 ## Version and Upgrade
 
