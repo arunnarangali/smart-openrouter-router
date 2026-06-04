@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.6
+
+### Fixed
+
+- `bin/opencode-free`: fixed OpenCode plugin installation path after packaged
+  install. The launcher now resolves the plugin from
+  `share/smart-openrouter-router/plugin` with a repo-development fallback.
+- `bin/opencode-free`: installs the OpenCode TUI plugin globally with
+  `opencode plugin -g`, so model toast visibility works from any project.
+- `bin/opencode-free`: checks global OpenCode TUI plugin config at
+  `${XDG_CONFIG_HOME:-~/.config}/opencode/tui.json` before installing.
+
+### Validation
+
+- `test_install_flow.sh` now verifies installed plugin files, installed plugin
+  path resolution, and global OpenCode TUI config path resolution.
+- Python compile checks passed.
+- Unit tests passed.
+- Installer-flow checks passed.
+
 ## v0.6.5
 
 ### Added

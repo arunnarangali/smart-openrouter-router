@@ -46,6 +46,8 @@ assert_exec "$BIN_DIR/opencode-free"
 assert_file "$SHARE_DIR/smart_router.py"
 assert_file "$SHARE_DIR/smart_router_common.py"
 assert_file "$SHARE_DIR/VERSION"
+assert_file "$SHARE_DIR/plugin/package.json"
+assert_file "$SHARE_DIR/plugin/index.js"
 
 python3 -m py_compile "$ROOT_DIR/smart_router.py"
 python3 -m py_compile "$ROOT_DIR/bin/smart-router"
@@ -258,6 +260,40 @@ assert 'google/gemini-2.0-flash-exp' not in json.dumps(models)
   pass "opencode-free config uses smart-router/best and smart-router/fast"
 else
   fail "opencode-free config does not use smart-router/* IDs"
+fi
+
+PLUGIN_PATH=$(python3 -c "
+import sys
+
+OC_PATH = '$BIN_DIR/opencode-free'
+with open(OC_PATH) as f:
+    src = f.read()
+namespace = {'__file__': OC_PATH, '__name__': 'ocfree_test'}
+exec(src, namespace)
+print(namespace['plugin_dir']())
+")
+EXPECTED_PLUGIN_PATH="$SHARE_DIR/plugin"
+if [ "$PLUGIN_PATH" = "$EXPECTED_PLUGIN_PATH" ]; then
+  pass "opencode-free resolves installed plugin path"
+else
+  fail "opencode-free plugin path mismatch: got '$PLUGIN_PATH' expected '$EXPECTED_PLUGIN_PATH'"
+fi
+
+OPENCODE_TUI_PATH=$(python3 -c "
+import sys
+
+OC_PATH = '$BIN_DIR/opencode-free'
+with open(OC_PATH) as f:
+    src = f.read()
+namespace = {'__file__': OC_PATH, '__name__': 'ocfree_test'}
+exec(src, namespace)
+print(namespace['plugin_tui_json_path']())
+")
+EXPECTED_TUI_PATH="$XDG_CONFIG_HOME/opencode/tui.json"
+if [ "$OPENCODE_TUI_PATH" = "$EXPECTED_TUI_PATH" ]; then
+  pass "opencode-free checks global OpenCode TUI plugin config"
+else
+  fail "opencode-free TUI config path mismatch: got '$OPENCODE_TUI_PATH' expected '$EXPECTED_TUI_PATH'"
 fi
 
 if grep -R -E 'sk-or-v1-[A-Za-z0-9]{20,}|OPENROUTER_API_KEY="sk-or-v1-[A-Za-z0-9]{20,}' "$ROOT_DIR" --exclude-dir=.git >/dev/null 2>&1; then

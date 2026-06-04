@@ -1,6 +1,6 @@
 {
   "name": "opencode-plugin-smart-router",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "OpenCode plugin that shows the real OpenRouter model used by smart-openrouter-router",
   "type": "module",
   "license": "MIT",
