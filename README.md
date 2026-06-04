@@ -55,9 +55,20 @@ OpenCode:
 opencode-free
 ```
 
-Note: OpenCode model entries are compatibility placeholders for the UI/provider.
-At runtime, the router ignores those client-sent IDs and selects ranked free
-OpenRouter models automatically.
+OpenCode shows `Smart Router — best (Free Auto)` / `Smart Router — fast (Free Auto)`
+in the model picker — they correspond to `smart-router/best` and `smart-router/fast`.
+The router always maps `smart-router/*` virtual IDs to its own ranked free-model
+selection at runtime, so you always get the best available free model for the
+detected scenario.
+
+**OpenCode note — the picker name is static.** OpenCode reads the model `name` once
+at startup from the config, so the dropdown cannot show a live-updating upstream
+model. To see the **real** model used per request:
+
+- **Easiest, no command:** OpenCode renders the upstream `model` field on every
+  chat-completions response, so each assistant message in the conversation is tagged
+  with the real model (e.g. `qwen/qwen3-coder:free`). Just look at the message header.
+- **Live, in another terminal:** `smart-router last --watch` or `smart-router opencode-status`.
 
 Installer/developer verification:
 
@@ -206,7 +217,8 @@ For Claude Code tool/agent requests, it also:
   - `GET /last`
   - `/last` includes `success` and `tool_request`
 - Response headers:
-  - `X-Smart-Router-Model`
+  - `X-Smart-Router-Model` — the real upstream model used
+  - `X-Smart-Router-Requested-Model` — the client-sent virtual model id
   - `X-Smart-Router-Scenario`
   - `X-Smart-Router-Retry-Count`
 
@@ -268,6 +280,8 @@ source ~/.zshrc
 - `smart-router stats --model <id>` - filter stats output to one model
 - `smart-router stats --provider <name>` - filter stats output to one provider
 - `smart-router logs` - show recent router log lines
+- `smart-router last --watch` - poll last route live (useful in concurrent terminal)
+- `smart-router opencode-status` - watch last route during opencode-free session, exits 2 on failure
 - `smart-router doctor` - run environment/runtime health checks
 - `smart-router doctor --fix-suggestions` - include suggested remediation steps
 - `smart-router reset` - clear runtime state

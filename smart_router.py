@@ -693,6 +693,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                             model=final_model,
                             scenario=scenario,
                             retry_count=len(failed_models),
+                            requested_model=requested_model_raw or "",
                         )
                         streamed = True
                         final_body = b""
@@ -795,6 +796,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             model=final_model,
             scenario=scenario,
             retry_count=retry_count,
+            requested_model=requested_model_raw or "",
         )
 
     def do_GET(self):
@@ -916,10 +918,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
             last_route.clear()
             last_route.update(payload)
 
-    def _proxy_response(self, code, body, content_type=None, model=None, scenario=None, retry_count=0):
+    def _proxy_response(self, code, body, content_type=None, model=None, scenario=None, retry_count=0, requested_model=""):
         self.send_response(code)
         self.send_header("Content-Type", content_type or "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
+        if requested_model:
+            self.send_header("X-Smart-Router-Requested-Model", requested_model)
         if model:
             self.send_header("X-Smart-Router-Model", model)
         if scenario:
@@ -928,10 +932,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _proxy_stream(self, resp, code, content_type=None, model=None, scenario=None, retry_count=0):
+    def _proxy_stream(self, resp, code, content_type=None, model=None, scenario=None, retry_count=0, requested_model=""):
         self.send_response(code)
         self.send_header("Content-Type", content_type or "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
+        if requested_model:
+            self.send_header("X-Smart-Router-Requested-Model", requested_model)
         if model:
             self.send_header("X-Smart-Router-Model", model)
         if scenario:

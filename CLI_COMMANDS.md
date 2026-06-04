@@ -18,6 +18,8 @@
 - `smart-router status --human` - Show compact human-readable status
 - `smart-router last` - Show last routed request
 - `smart-router last --human` - Show compact human-readable last route
+- `smart-router last --watch [INTERVAL]` - Poll /last every INTERVAL seconds (default: 1.0)
+- `smart-router opencode-status [--interval SECONDS]` - Watch live routing info during opencode-free; exits 2 on failure
 - `smart-router logs` - Show router logs
 - `smart-router logs --path` - Print router log file path
 

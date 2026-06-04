@@ -202,9 +202,18 @@ claude-free
 opencode-free
 ```
 
-OpenCode note: dropdown model entries are compatibility placeholders for
-OpenCode UI/provider wiring. The router still ignores those client model IDs
-and enforces free-only ranked selection at runtime.
+OpenCode dropdown shows `Smart Router — best (Free Auto)` / `Smart Router — fast (Free Auto)`
+corresponding to `smart-router/best` and `smart-router/fast`. The router maps
+`smart-router/*` virtual IDs to its own ranked free-model selection at runtime.
+
+**OpenCode note — the picker name is static.** OpenCode reads the model `name` once
+at startup from the config, so the dropdown cannot show a live-updating upstream
+model. To see the **real** model used per request:
+
+- **Easiest, no command:** OpenCode renders the upstream `model` field on every
+  chat-completions response, so each assistant message in the conversation is tagged
+  with the real model (e.g. `qwen/qwen3-coder:free`). Just look at the message header.
+- **Live, in another terminal:** `smart-router last --watch` or `smart-router opencode-status`.
 
 The router starts automatically for this session and stops when Claude exits.
 
@@ -375,7 +384,13 @@ The proxy chooses and retries automatically.
 
 ## 10) How to see which real model was used
 
-After any Claude Code request:
+### In OpenCode — no command needed
+
+OpenCode renders the upstream `model` field on every chat-completions response,
+so each assistant message in the conversation is automatically tagged with the
+real model (e.g. `qwen/qwen3-coder:free`). Just look at the message header.
+
+### Via CLI (works for both Claude Code and OpenCode)
 
 ```bash
 smart-router last
@@ -394,6 +409,23 @@ This shows fields like:
 - `cooldowns_added` (cooldowns recorded during fallback)
 - `failed_models` (if retries happened)
 
+### Live watching (recommended for opencode-free)
+
+Run in a second terminal to see each request as it happens:
+
+```bash
+smart-router last --watch
+```
+
+Or with a shorter alias designed for opencode sessions:
+
+```bash
+smart-router opencode-status
+```
+
+`opencode-status` exits with code `2` if the last observed request failed —
+useful for status bars / CI.
+
 You can also view status summary:
 
 ```bash
@@ -405,6 +437,12 @@ And logs:
 ```bash
 smart-router logs
 ```
+
+Response headers on every request include:
+- `X-Smart-Router-Model` — the real upstream model
+- `X-Smart-Router-Requested-Model` — the client-sent virtual model id
+- `X-Smart-Router-Scenario`
+- `X-Smart-Router-Retry-Count`
 
 ---
 
@@ -446,6 +484,8 @@ This makes Claude Code usage much more reliable.
 - `smart-router cooldowns` / `smart-router cooldowns clear` - cooldown visibility/control
 - `smart-router stats` / `smart-router stats reset` - performance stats visibility/control
 - `smart-router logs` - show recent router log lines
+- `smart-router last --watch [INTERVAL]` - poll last route every INTERVAL seconds (default: 1.0)
+- `smart-router opencode-status [--interval SECONDS]` - watch live routing info during opencode-free; exits 2 on failure
 - `smart-router doctor` - run environment/runtime health checks
 - `smart-router doctor --fix-suggestions` - include suggested remediation steps
 - `smart-router reset` - clear runtime state

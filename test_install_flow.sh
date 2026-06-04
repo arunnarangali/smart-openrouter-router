@@ -52,6 +52,7 @@ python3 -m py_compile "$ROOT_DIR/bin/smart-router"
 python3 -m py_compile "$ROOT_DIR/bin/claude-free"
 python3 -m py_compile "$ROOT_DIR/bin/opencode-free"
 python3 -m py_compile "$ROOT_DIR/test_scenario_detection.py"
+python3 -m py_compile "$ROOT_DIR/test_routing_resolution.py"
 pass "Python syntax checks passed"
 
 bash -n "$ROOT_DIR/install.sh"
@@ -217,6 +218,39 @@ if python3 "$ROOT_DIR/test_scenario_detection.py" >/dev/null; then
   pass "scenario detection tests passed"
 else
   fail "scenario detection tests failed"
+fi
+
+if python3 "$ROOT_DIR/test_routing_resolution.py" >/dev/null; then
+  pass "routing resolution tests passed"
+else
+  fail "routing resolution tests failed"
+fi
+
+# Verify opencode-free runtime config uses smart-router/* IDs, not old placeholders
+CONFIG_JSON=$(python3 -c "
+import sys, types
+
+OC_PATH = '$ROOT_DIR/bin/opencode-free'
+with open(OC_PATH) as f:
+    src = f.read()
+namespace = {'__file__': OC_PATH, '__name__': 'ocfree_test'}
+exec(src, namespace)
+print(namespace['runtime_opencode_config'](9999, 'test-key'))
+")
+if echo "$CONFIG_JSON" | python3 -c "
+import sys, json
+cfg = json.loads(sys.stdin.read())
+models = cfg['provider']['smart-router']['models']
+assert 'best' in models, 'missing best model'
+assert 'fast' in models, 'missing fast model'
+assert models['best']['id'] == 'smart-router/best'
+assert models['fast']['id'] == 'smart-router/fast'
+assert 'openai/gpt-4o-mini' not in json.dumps(models)
+assert 'google/gemini-2.0-flash-exp' not in json.dumps(models)
+" >/dev/null 2>&1; then
+  pass "opencode-free config uses smart-router/best and smart-router/fast"
+else
+  fail "opencode-free config does not use smart-router/* IDs"
 fi
 
 if grep -R -E 'sk-or-v1-[A-Za-z0-9]{20,}|OPENROUTER_API_KEY="sk-or-v1-[A-Za-z0-9]{20,}' "$ROOT_DIR" --exclude-dir=.git >/dev/null 2>&1; then
