@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.4
+
+### Fixed
+
+- `bin/opencode-free`: added missing `import threading` that caused `NameError`
+  on startup. The `_start_terminal_title_thread` function uses
+  `threading.Thread` but the module was not imported.
+
+### Validation
+
+- Python compile checks passed.
+- `python3 test_routing_response_rewrite.py` passed (11/11).
+- `python3 test_routing_resolution.py` passed (6/6).
+- `python3 test_scenario_detection.py` passed.
+
 ## v0.6.3
 
 ### Added
