@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.5
+
+### Added
+
+- OpenCode TUI plugin (`plugin/`) that shows the real upstream model used by the
+  router. On each assistant response completion, the plugin reads the router's
+  `/last` endpoint and displays a toast notification (e.g. "Smart Router →
+  qwen/qwen3-coder:free").
+- `bin/opencode-free`: on startup, installs the plugin via `opencode plugin` if
+  not already present. Warns on install failure.
+- `install.sh`: copies `plugin/` directory to the installed share prefix.
+
+### Changed
+
+- `opencode-free` startup tip updated to mention the in-TUI toast.
+
+### Fixed
+
+- Response body model rewrite (v0.6.3) confirmed working but invisible to
+  OpenCode's TUI, which uses its own internal model tracking. The plugin
+  provides the missing visibility layer.
+
+### Validation
+
+- `opencode plugin ./plugin` installs successfully (tui target detected).
+- Python compile checks passed.
+- All existing tests passed.
+
 ## v0.6.4
 
 ### Fixed

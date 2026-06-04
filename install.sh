@@ -12,11 +12,15 @@ mkdir -p "$BIN_DIR" "$SHARE_DIR" "$CONFIG_DIR" "$CACHE_DIR"
 
 cp "$ROOT_DIR/smart_router.py" "$SHARE_DIR/smart_router.py"
 cp "$ROOT_DIR/smart_router_common.py" "$SHARE_DIR/smart_router_common.py"
-cp "$ROOT_DIR/bin/claude-free" "$BIN_DIR/claude-free"
-cp "$ROOT_DIR/bin/opencode-free" "$BIN_DIR/opencode-free"
-cp "$ROOT_DIR/bin/smart-router" "$BIN_DIR/smart-router"
+    cp "$ROOT_DIR/bin/claude-free" "$BIN_DIR/claude-free"
+    cp "$ROOT_DIR/bin/opencode-free" "$BIN_DIR/opencode-free"
+    cp "$ROOT_DIR/bin/smart-router" "$BIN_DIR/smart-router"
 
-printf '%s\n' "${SMART_ROUTER_VERSION:-unknown}" > "$SHARE_DIR/VERSION"
+    mkdir -p "$SHARE_DIR/plugin"
+    cp "$ROOT_DIR/plugin/package.json" "$SHARE_DIR/plugin/package.json"
+    cp "$ROOT_DIR/plugin/index.js" "$SHARE_DIR/plugin/index.js"
+
+    printf '%s\n' "${SMART_ROUTER_VERSION:-unknown}" > "$SHARE_DIR/VERSION"
 
 chmod +x "$BIN_DIR/claude-free" "$BIN_DIR/opencode-free" "$BIN_DIR/smart-router"
 

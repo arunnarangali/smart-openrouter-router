@@ -1,0 +1,23 @@
+{
+  "name": "opencode-plugin-smart-router",
+  "version": "0.6.5",
+  "description": "OpenCode plugin that shows the real OpenRouter model used by smart-openrouter-router",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./index.js",
+    "./tui": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "opencode",
+    "plugin",
+    "smart-router",
+    "openrouter"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

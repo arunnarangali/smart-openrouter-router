@@ -1,6 +1,6 @@
 {
   "name": "smart-openrouter-router",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Free-model-only OpenRouter smart routing proxy and helper CLI",
   "type": "module",
   "license": "MIT",
@@ -28,6 +28,8 @@
     "smart_openrouter_router/",
     "smart_router.py",
     "smart_router_common.py",
+    "plugin/package.json",
+    "plugin/index.js",
     "install.sh",
     "smart-router-install.sh",
     "README.md",

@@ -178,6 +178,40 @@ def print_tail_log(lines: int = 40) -> None:
     eprint("--- end log ---\n")
 
 
+def plugin_tui_json_path() -> Path:
+    return install_prefix() / ".opencode" / "tui.json"
+
+
+def is_plugin_installed() -> bool:
+    path = plugin_tui_json_path()
+    if not path.exists():
+        return False
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        plugins = data.get("plugin", [])
+        return any("smart-router" in str(p) for p in plugins)
+    except Exception:
+        return False
+
+
+def install_plugin() -> bool:
+    if is_plugin_installed():
+        return True
+    plugin_dir = install_prefix() / "plugin"
+    if not (plugin_dir / "package.json").exists():
+        return False
+    try:
+        result = subprocess.run(
+            ["opencode", "plugin", str(plugin_dir)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
 def runtime_opencode_config(port: int, api_key: str) -> str:
     # OpenCode model entries use smart-router/* virtual IDs.
     # The router maps smart-router/* → ranked free-model selection
@@ -229,8 +263,10 @@ def main() -> int:
 
         write_active(port, proc.pid)
         _start_terminal_title_thread(port)
+        if not install_plugin():
+            eprint("Warning: could not install smart-router OpenCode plugin. The real model name will not appear in the TUI.")
 
-        eprint("Tip: the real model appears in your terminal title and in each assistant message attribution. Run \"smart-router last --watch\" in another terminal for live details.")
+        eprint("Tip: the real model appears in the TUI as a toast after each response. Run \"smart-router last --watch\" in another terminal for live details.")
 
         env = os.environ.copy()
         env["OPENROUTER_API_KEY"] = api_key
