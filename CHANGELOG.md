@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.2
+
+### Added
+
+- `bin/opencode-free`: model entries renamed to `best`/`fast` with explicit `smart-router/best` and `smart-router/fast` virtual IDs in the OpenCode config; added startup tip directing users to the chat-bubble model indicator and `smart-router last --watch`.
+- `smart_router.py`: added `X-Smart-Router-Requested-Model` response header alongside existing `X-Smart-Router-Model` and peers.
+- `bin/smart-router`:
+  - `smart-router last --watch [INTERVAL]` — polls `/last` live, one-line per tick.
+  - `smart-router opencode-status [--interval SECONDS]` — same as `last --watch`, exits code `2` on failure.
+- `test_routing_resolution.py`: 6 test cases for `select_candidates` with `smart-router/*`, exact free IDs, paid IDs, and empty requests.
+
+### Changed
+
+- OpenCode model dropdown shows virtual `smart-router/*` names instead of hard-coded `openai/gpt-4o-mini` / `google/gemini-2.0-flash-exp` placeholders. Routing behavior unchanged (router already maps `smart-router/*` to ranked free models).
+
+### Documentation
+
+- Updated `README.md` and `FULL_GUIDE.md` to explain the static-picker limitation in OpenCode and direct users to the chat-bubble model indicator or `smart-router last --watch` / `opencode-status` for live visibility.
+- Added `last --watch` and `opencode-status` to `CLI_COMMANDS.md`.
+
+### Validation
+
+- Python compile checks passed.
+- `python3 test_routing_resolution.py` passed (6/6).
+- `python3 test_scenario_detection.py` passed.
+- `bash test_install_flow.sh` passed (all checks).
+
 ## v0.6.1
 
 ### Changed
