@@ -210,9 +210,11 @@ corresponding to `smart-router/best` and `smart-router/fast`. The router maps
 at startup from the config, so the dropdown cannot show a live-updating upstream
 model. To see the **real** model used per request:
 
-- **Easiest, no command:** OpenCode renders the upstream `model` field on every
-  chat-completions response, so each assistant message in the conversation is tagged
-  with the real model (e.g. `qwen/qwen3-coder:free`). Just look at the message header.
+- **Terminal title (automatic):** `opencode-free` updates your terminal tab title
+  with the real model (e.g. `opencode-free · qwen/qwen3-coder:free`).
+- **Response body (automatic):** each chat-completions response carries the real
+  `model` field (already rewritten by the router). If OpenCode uses this field in
+  its UI, the real model name appears in the assistant message attribution.
 - **Live, in another terminal:** `smart-router last --watch` or `smart-router opencode-status`.
 
 The router starts automatically for this session and stops when Claude exits.
@@ -384,11 +386,17 @@ The proxy chooses and retries automatically.
 
 ## 10) How to see which real model was used
 
-### In OpenCode — no command needed
+### Terminal title (opencode-free only)
 
-OpenCode renders the upstream `model` field on every chat-completions response,
-so each assistant message in the conversation is automatically tagged with the
-real model (e.g. `qwen/qwen3-coder:free`). Just look at the message header.
+The terminal tab title updates automatically within ~1 second of each request
+finishing, showing `opencode-free · qwen/qwen3-coder:free` (or whatever the
+actual upstream model was). No command needed.
+
+### Response body (opencode-free only)
+
+The router rewrites the `model` field in every chat-completions response to the
+real upstream model. If OpenCode uses this field in its UI, assistant messages
+will show the real model name in their attribution.
 
 ### Via CLI (works for both Claude Code and OpenCode)
 

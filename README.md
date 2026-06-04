@@ -65,9 +65,11 @@ detected scenario.
 at startup from the config, so the dropdown cannot show a live-updating upstream
 model. To see the **real** model used per request:
 
-- **Easiest, no command:** OpenCode renders the upstream `model` field on every
-  chat-completions response, so each assistant message in the conversation is tagged
-  with the real model (e.g. `qwen/qwen3-coder:free`). Just look at the message header.
+- **Terminal title (automatic):** `opencode-free` updates your terminal tab title
+  with the real model (e.g. `opencode-free · qwen/qwen3-coder:free`).
+- **Response body (automatic):** each chat-completions response carries the real
+  `model` field (already rewritten by the router). If OpenCode uses this field in
+  its UI, the real model name appears in the assistant message attribution.
 - **Live, in another terminal:** `smart-router last --watch` or `smart-router opencode-status`.
 
 Installer/developer verification:

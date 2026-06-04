@@ -78,25 +78,24 @@ def wait_for_status(port: int, timeout: float = 6.0) -> bool:
 
 
 def start_router(api_key: str, port: int) -> subprocess.Popen:
-    env = os.environ.copy()
-    env["OPENROUTER_API_KEY"] = api_key
-    env["PROXY_PORT"] = str(port)
-    env["SMART_ROUTER_LOG"] = str(LOG_FILE)
+    extra = {"SMART_ROUTER_REWRITE_MODEL": "1"}
 
     if not ROUTER_SCRIPT.exists():
         fallback = Path.home() / "smart_router.py"
         if fallback.exists():
-            return start_router_from_path(api_key, port, fallback)
+            return start_router_from_path(api_key, port, fallback, extra_env=extra)
         raise FileNotFoundError(f"Router script not found: {ROUTER_SCRIPT}")
 
-    return start_router_from_path(api_key, port, ROUTER_SCRIPT)
+    return start_router_from_path(api_key, port, ROUTER_SCRIPT, extra_env=extra)
 
 
-def start_router_from_path(api_key: str, port: int, script_path: Path) -> subprocess.Popen:
+def start_router_from_path(api_key: str, port: int, script_path: Path, extra_env: dict | None = None) -> subprocess.Popen:
     env = os.environ.copy()
     env["OPENROUTER_API_KEY"] = api_key
     env["PROXY_PORT"] = str(port)
     env["SMART_ROUTER_LOG"] = str(LOG_FILE)
+    if extra_env:
+        env.update(extra_env)
 
     log_handle = LOG_FILE.open("a", encoding="utf-8")
     proc = subprocess.Popen(
@@ -143,6 +142,27 @@ def stop_router(proc: subprocess.Popen) -> None:
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait(timeout=2)
+
+
+def _start_terminal_title_thread(port: int) -> None:
+    """Daemon thread that polls /last and updates terminal title with real model."""
+    def _poll():
+        last_model = ""
+        while True:
+            time.sleep(1.0)
+            try:
+                req = Request(f"http://127.0.0.1:{port}/last")
+                with urlopen(req, timeout=2) as resp:
+                    data = json.loads(resp.read())
+                final = data.get("final_model", "")
+                if final and final != last_model:
+                    last_model = final
+                    sys.stderr.write(f"\033]0;opencode-free · {final}\007")
+                    sys.stderr.flush()
+            except Exception:
+                pass
+    t = threading.Thread(target=_poll, daemon=True)
+    t.start()
 
 
 def print_tail_log(lines: int = 40) -> None:
@@ -207,8 +227,9 @@ def main() -> int:
             return 1
 
         write_active(port, proc.pid)
+        _start_terminal_title_thread(port)
 
-        eprint("Tip: real model name appears next to each OpenCode response. Run \"smart-router last --watch\" in another terminal for live details.")
+        eprint("Tip: the real model appears in your terminal title and in each assistant message attribution. Run \"smart-router last --watch\" in another terminal for live details.")
 
         env = os.environ.copy()
         env["OPENROUTER_API_KEY"] = api_key

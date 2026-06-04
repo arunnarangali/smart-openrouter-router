@@ -21,6 +21,7 @@ from urllib.request import Request, urlopen
 from smart_router_common import SCENARIOS, analyze_prompt_text, build_default_profiles, filter_free_models, write_json_atomic
 
 
+REWRITE_MODEL = os.environ.get("SMART_ROUTER_REWRITE_MODEL", "") == "1"
 PROXY_HOST = "127.0.0.1"
 PROXY_PORT = int(os.environ.get("PROXY_PORT", "8080"))
 OPENROUTER_ORIGIN = "https://openrouter.ai"
@@ -553,7 +554,20 @@ def scenario_group_name(scenario: str) -> str:
     return "core"
 
 
+def _rewrite_json_model(body_bytes, new_model):
+    """Rewrite the `model` field in a JSON response body."""
+    try:
+        payload = json.loads(body_bytes)
+        if isinstance(payload, dict):
+            payload["model"] = new_model
+            return json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    except (json.JSONDecodeError, Exception):
+        pass
+    return body_bytes
+
+
 class ProxyHandler(BaseHTTPRequestHandler):
+    MAX_SSE_CARRY = 16384
     def log_message(self, _format, *args):
         return
 
@@ -930,7 +944,41 @@ class ProxyHandler(BaseHTTPRequestHandler):
             self.send_header("X-Smart-Router-Scenario", scenario)
         self.send_header("X-Smart-Router-Retry-Count", str(retry_count))
         self.end_headers()
+        if REWRITE_MODEL and model and body:
+            body = _rewrite_json_model(body, model)
         self.wfile.write(body)
+
+    def _rewrite_sse_chunk(self, chunk, new_model):
+        data = (self._sse_tail + chunk) if self._sse_tail else chunk
+        if data.endswith(b"\n"):
+            self._sse_tail = b""
+            return self._rewrite_sse_lines(data, new_model)
+        idx = data.rfind(b"\n")
+        if idx == -1:
+            if len(data) > self.MAX_SSE_CARRY:
+                self._sse_tail = b""
+                return data
+            self._sse_tail = data
+            return b""
+        self._sse_tail = data[idx + 1:]
+        return self._rewrite_sse_lines(data[:idx + 1], new_model)
+
+    @staticmethod
+    def _rewrite_sse_lines(data, new_model):
+        lines = data.split(b"\n")
+        out = []
+        for line in lines:
+            if line.startswith(b"data: ") and not line.startswith(b"data: [DONE]"):
+                try:
+                    payload = json.loads(line[6:])
+                    if isinstance(payload, dict):
+                        payload["model"] = new_model
+                        out.append(b"data: " + json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+                        continue
+                except (json.JSONDecodeError, Exception):
+                    pass
+            out.append(line)
+        return b"\n".join(out)
 
     def _proxy_stream(self, resp, code, content_type=None, model=None, scenario=None, retry_count=0, requested_model=""):
         self.send_response(code)
@@ -945,13 +993,17 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.send_header("X-Smart-Router-Retry-Count", str(retry_count))
         self.send_header("Connection", "close")
         self.end_headers()
+        self._sse_tail = b""
         try:
             while True:
                 chunk = resp.read(8192)
                 if not chunk:
                     break
-                self.wfile.write(chunk)
-                self.wfile.flush()
+                if REWRITE_MODEL and model:
+                    chunk = self._rewrite_sse_chunk(chunk, model)
+                if chunk:
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
             pass
 

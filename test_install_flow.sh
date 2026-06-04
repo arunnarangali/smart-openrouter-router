@@ -53,6 +53,7 @@ python3 -m py_compile "$ROOT_DIR/bin/claude-free"
 python3 -m py_compile "$ROOT_DIR/bin/opencode-free"
 python3 -m py_compile "$ROOT_DIR/test_scenario_detection.py"
 python3 -m py_compile "$ROOT_DIR/test_routing_resolution.py"
+python3 -m py_compile "$ROOT_DIR/test_routing_response_rewrite.py"
 pass "Python syntax checks passed"
 
 bash -n "$ROOT_DIR/install.sh"
@@ -224,6 +225,12 @@ if python3 "$ROOT_DIR/test_routing_resolution.py" >/dev/null; then
   pass "routing resolution tests passed"
 else
   fail "routing resolution tests failed"
+fi
+
+if python3 "$ROOT_DIR/test_routing_response_rewrite.py" >/dev/null; then
+  pass "response rewrite tests passed"
+else
+  fail "response rewrite tests failed"
 fi
 
 # Verify opencode-free runtime config uses smart-router/* IDs, not old placeholders

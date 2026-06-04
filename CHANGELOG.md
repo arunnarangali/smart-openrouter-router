@@ -2,6 +2,44 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.3
+
+### Added
+
+- `smart_router.py`: added opt-in response body model rewrite (`SMART_ROUTER_REWRITE_MODEL=1`).
+  - `_rewrite_json_model()` rewrites the `model` field in non-streaming JSON replies.
+  - `_rewrite_sse_chunk()` / `_rewrite_sse_lines()` rewrite `model` in SSE `data:` lines with
+    carry-over buffer for chunk-boundary splits (up to 16 KB).
+  - `_proxy_response` and `_proxy_stream` apply the rewrite when the env var is `1`.
+- `bin/opencode-free`:
+  - Sets `SMART_ROUTER_REWRITE_MODEL=1` in the router subprocess env.
+  - Spawns a daemon thread that polls `/last` every 1 s and updates the terminal
+    title via OSC 0 escape (`opencode-free · <real-model>`).
+- `test_routing_response_rewrite.py`: 11 test cases for JSON body rewrite, SSE
+  data line rewrite, chunk-boundary splits, `data: [DONE]` passthrough, and
+  disabled-by-default behavior.
+
+### Changed
+
+- `bin/opencode-free`: startup tip updated to mention terminal title and
+  assistant message attribution instead of the previous chat-bubble claim.
+
+### Documentation
+
+- `README.md` and `FULL_GUIDE.md`: corrected the claim that OpenCode chat
+  bubbles show the real model. Replaced with accurate description of three
+  surfaces: terminal title (automatic), response body model field (router
+  rewrites it), and `smart-router last --watch` / `opencode-status` (always
+  works).
+
+### Validation
+
+- Python compile checks passed.
+- `python3 test_routing_resolution.py` passed (6/6).
+- `python3 test_routing_response_rewrite.py` passed (11/11).
+- `python3 test_scenario_detection.py` passed.
+- `bash test_install_flow.sh` passed (all checks).
+
 ## v0.6.2
 
 ### Added
