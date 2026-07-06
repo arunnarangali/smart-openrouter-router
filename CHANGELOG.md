@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.6.7
+
+### Fixed
+
+- `smart_router.py`: retry the next ranked free model when OpenRouter rejects a
+  request because the chosen endpoint's context window is too small. This fixes
+  OpenCode sessions getting stuck on 32k-context models for requests such as
+  `8685` input tokens plus `32000` requested output tokens.
+
+### Validation
+
+- `python3 test_routing_resolution.py` passed.
+- `python3 test_routing_response_rewrite.py` passed.
+- `python3 test_scenario_detection.py` passed.
+
 ## v0.6.6
 
 ### Fixed

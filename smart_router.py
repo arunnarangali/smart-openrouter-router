@@ -406,6 +406,16 @@ def should_retry(status, body_bytes):
     details = parse_error_details(body_bytes)
     combined = f"{details.get('message', '')}".lower()
 
+    context_markers = [
+        "maximum context length",
+        "context length",
+        "context window",
+        "requested about",
+        "reduce the length",
+    ]
+    if any(marker in combined for marker in context_markers):
+        return True
+
     if status == 404:
         tool_markers = [
             "no endpoints found",

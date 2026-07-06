@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Tests for select_candidates routing resolution."""
+"""Tests for routing resolution and retry classification."""
+
+import json
 
 import sys
 from pathlib import Path
@@ -7,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from smart_router import select_candidates
+from smart_router import select_candidates, should_retry
 
 
 def make_model(id_: str) -> dict:
@@ -74,6 +76,22 @@ def test_empty_request():
     assert reason == "empty-request"
 
 
+def test_context_length_error_retries():
+    body = json.dumps({
+        "error": {
+            "message": "This endpoint's maximum context length is 32768 tokens. However, you requested about 40685 tokens (8685 of text input, 32000 in the output). Please reduce the length of either one, or use the context-compression plugin to compress your prompt automatically."
+        }
+    }).encode()
+
+    assert should_retry(400, body) is True
+
+
+def test_unrelated_bad_request_does_not_retry():
+    body = json.dumps({"error": {"message": "Invalid request body"}}).encode()
+
+    assert should_retry(400, body) is False
+
+
 def main() -> int:
     test_smart_router_best()
     test_smart_router_fast()
@@ -81,6 +99,8 @@ def main() -> int:
     test_exact_free_model()
     test_paid_non_free()
     test_empty_request()
+    test_context_length_error_retries()
+    test_unrelated_bad_request_does_not_retry()
     print("Routing resolution tests passed")
     return 0
 
